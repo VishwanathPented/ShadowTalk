@@ -46,6 +46,7 @@ public class SocialGroup {
     public User getCreatedBy() { return createdBy; }
     public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("isPrivate")
     public boolean isPrivate() { return isPrivate; }
     public void setPrivate(boolean isPrivate) { this.isPrivate = isPrivate; }
 

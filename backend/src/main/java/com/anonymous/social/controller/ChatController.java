@@ -42,8 +42,12 @@ public class ChatController {
 
         String email = principal != null ? principal.getName() : payload.get("email");
         System.out.println("ChatController: Received message from " + email + " for group " + groupId);
-        // Note: In real production, never trust payload email without verification.
-        // We will assume the frontend sends the token or connection is authenticated.
+        System.out.println("Payload: " + payload);
+
+        if (email == null || email.isEmpty()) {
+             System.out.println("Error: Email is missing in payload and Principal is null.");
+             // Potentially throw error or handle gracefully
+        }
 
         String message = payload.get("message");
         return chatService.saveMessage(groupId, email, message);

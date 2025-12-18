@@ -15,6 +15,7 @@ const Groups = () => {
             setGroups(res.data);
         } catch (error) {
             console.error(error);
+            toast.error("Failed to load groups: " + (error.response?.data?.message || error.message));
         }
     };
 

@@ -37,13 +37,13 @@ const ChatBox = ({ groupId }) => {
         loadHistory();
 
         // Connect WebSocket
-        /*
-        const wsUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('http', 'ws') + '/ws' : 'http://localhost:8080/ws';
+        const wsUrl = 'http://localhost:8080/ws'; // SockJS endpoint
         const socket = new SockJS(wsUrl);
         const stompClient = Stomp.over(socket);
         // stompClient.debug = () => { }; // Keep debug for now
 
         stompClient.connect({}, (frame) => {
+            console.log('Connected: ' + frame);
             // Subscribe
             stompClient.subscribe(`/topic/group/${groupId}`, (message) => {
                 const receivedMsg = JSON.parse(message.body);
@@ -55,10 +55,9 @@ const ChatBox = ({ groupId }) => {
         });
 
         stompClientRef.current = stompClient;
-        */
 
         return () => {
-            // if (stompClientRef.current) stompClientRef.current.disconnect();
+             if (stompClientRef.current) stompClientRef.current.disconnect();
         };
     }, [groupId]);
 
@@ -72,34 +71,26 @@ const ChatBox = ({ groupId }) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
 
-        // Backend expects: { email: "...", message: "..." } if not using Principal
-        // But we have jwt in http only. STOMP connect headers can carry token ideally.
-        // For MVP quick fix: send email in payload (Not secure but meets 'beginners' requirement)
-        // Ideally: Auth in connect headers using interceptor.
-
-        // Wait, I don't have user email easily accessible in AuthContext without decoding token or fetching /me.
-        // I will fetch /auth/me or just decoding token.
-        // Let's assume we decode or backend allows unauthenticated for this MVP step (risky).
-        // Correction: Backend ChatController uses Principal. If Principal is null it looks for payload email.
-        // I should send email. I will assume I can parse it from token or store it on login.
-
-        // To be safe, let's decode token here.
         const token = localStorage.getItem('token');
         let email = '';
         if (token) {
             try {
                 const decoded = jwtDecode(token);
-                email = decoded.sub;
+                email = decoded.sub; // 'sub' usually holds the username/email in Spring Security JWT
             } catch (e) {
                 console.error("Failed to decode token", e);
             }
         }
 
-        stompClientRef.current.send(`/app/chat/${groupId}`, {}, JSON.stringify({
-            email: email,
-            message: newMessage
-        }));
-        setNewMessage('');
+        if (stompClientRef.current && stompClientRef.current.connected) {
+            stompClientRef.current.send(`/app/chat/${groupId}`, {}, JSON.stringify({
+                email: email,
+                message: newMessage
+            }));
+            setNewMessage('');
+        } else {
+            console.error("STOMP client is not connected");
+        }
     };
 
     return (
