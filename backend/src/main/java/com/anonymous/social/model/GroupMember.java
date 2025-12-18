@@ -1,15 +1,9 @@
 package com.anonymous.social.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "group_members")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class GroupMember {
 
     @Id
@@ -23,4 +17,15 @@ public class GroupMember {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    public GroupMember() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public SocialGroup getGroup() { return group; }
+    public void setGroup(SocialGroup group) { this.group = group; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 }

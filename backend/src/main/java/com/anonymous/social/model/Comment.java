@@ -1,18 +1,12 @@
 package com.anonymous.social.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comments")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Comment {
 
     @Id
@@ -33,4 +27,21 @@ public class Comment {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public Comment() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Post getPost() { return post; }
+    public void setPost(Post post) { this.post = post; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

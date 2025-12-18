@@ -1,9 +1,6 @@
 package com.anonymous.social.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -11,9 +8,6 @@ import java.util.List;
 
 @Entity
 @Table(name = "posts")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Post {
 
     @Id
@@ -34,7 +28,6 @@ public class Post {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // We can allow cascading delete to remove related data if a post is deleted
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostLike> likes;
 
@@ -43,4 +36,30 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Repost> reposts;
+
+    public Post() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public String getMediaUrl() { return mediaUrl; }
+    public void setMediaUrl(String mediaUrl) { this.mediaUrl = mediaUrl; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public List<PostLike> getLikes() { return likes; }
+    public void setLikes(List<PostLike> likes) { this.likes = likes; }
+
+    public List<Comment> getComments() { return comments; }
+    public void setComments(List<Comment> comments) { this.comments = comments; }
+
+    public List<Repost> getReposts() { return reposts; }
+    public void setReposts(List<Repost> reposts) { this.reposts = reposts; }
 }
