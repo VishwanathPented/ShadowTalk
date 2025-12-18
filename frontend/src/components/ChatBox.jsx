@@ -11,7 +11,8 @@ import { useAuth } from '../context/AuthContext';
 // If 'global' is issue in Vite, we add: <script>window.global = window;</script> to index.html manually if needed.
 
 import Stomp from 'stompjs';
-import SockJS from 'sockjs-client/dist/sockjs'; // Import explicitly dist
+import SockJS from "sockjs-client"; // Import explicitly dist
+import { jwtDecode } from "jwt-decode";
 import api from '../api/axios';
 import { HiPaperAirplane } from 'react-icons/hi';
 
@@ -36,10 +37,11 @@ const ChatBox = ({ groupId }) => {
         loadHistory();
 
         // Connect WebSocket
+        /*
         const wsUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('http', 'ws') + '/ws' : 'http://localhost:8080/ws';
         const socket = new SockJS(wsUrl);
         const stompClient = Stomp.over(socket);
-        stompClient.debug = () => { }; // Disable debug logs
+        // stompClient.debug = () => { }; // Keep debug for now
 
         stompClient.connect({}, (frame) => {
             // Subscribe
@@ -53,9 +55,10 @@ const ChatBox = ({ groupId }) => {
         });
 
         stompClientRef.current = stompClient;
+        */
 
         return () => {
-            if (stompClientRef.current) stompClientRef.current.disconnect();
+            // if (stompClientRef.current) stompClientRef.current.disconnect();
         };
     }, [groupId]);
 
@@ -82,8 +85,15 @@ const ChatBox = ({ groupId }) => {
 
         // To be safe, let's decode token here.
         const token = localStorage.getItem('token');
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const email = payload.sub;
+        let email = '';
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                email = decoded.sub;
+            } catch (e) {
+                console.error("Failed to decode token", e);
+            }
+        }
 
         stompClientRef.current.send(`/app/chat/${groupId}`, {}, JSON.stringify({
             email: email,

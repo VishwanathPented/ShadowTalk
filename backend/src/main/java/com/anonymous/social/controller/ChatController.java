@@ -41,6 +41,7 @@ public class ChatController {
         // Let's rely on payload "email" or "token" if Principal is null, but ideally Principal works.
 
         String email = principal != null ? principal.getName() : payload.get("email");
+        System.out.println("ChatController: Received message from " + email + " for group " + groupId);
         // Note: In real production, never trust payload email without verification.
         // We will assume the frontend sends the token or connection is authenticated.
 
