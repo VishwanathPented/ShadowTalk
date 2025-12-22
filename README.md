@@ -20,7 +20,7 @@ A Twitter-like anonymous social platform where users are assigned random anonymo
 - Node.js 18+
 - MySQL Server
 
-### 1. Database Setup
+### 1. Database Setup 
 Create a MySQL database named `anonymous_db`.
 ```sql
 CREATE DATABASE anonymous_db;
