@@ -23,7 +23,7 @@ const Login = () => {
                 await signup(email, password, alias);
                 toast.success('Account created anonymously.');
             }
-            navigate('/');
+            navigate('/feed');
         } catch (error) {
             console.error("Login Error:", error);
             if (error.response) {

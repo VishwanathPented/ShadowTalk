@@ -20,7 +20,7 @@ const TrendingSidebar = () => {
     if (hashtags.length === 0) return null;
 
     return (
-        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 sticky top-4">
+        <div className="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-4 sticky top-4 shadow-xl shadow-black/20">
             <h3 className="text-white font-bold flex items-center gap-2 mb-4">
                 <HiTrendingUp className="text-brand-primary" />
                 Trending
