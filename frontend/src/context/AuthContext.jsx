@@ -1,7 +1,6 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import api from '../api/axios';
-// import jwtDecode from 'jwt-decode'; // Cannot use import needing install if not installed, but we added it to package.json.
-// However, to keep it simple and robust without valid node_modules, we will just store token.
+import { jwtDecode } from "jwt-decode";
 
 const AuthContext = createContext();
 
@@ -14,17 +13,34 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         if (token) {
-            // decipher user from token or fetch profile?
-            // For MVP, we just assume valid if token exists.
-            // Ideally: await api.get('/auth/me')
-            setUser({ loggedIn: true });
+            try {
+                console.log("Attempting to decode token:", token);
+                const decoded = jwtDecode(token);
+                console.log("Decoded successfully:", decoded);
+                // Spring Security usually puts email/username in 'sub'
+                // We also get 'anonymousName' from our custom claim
+                setUser({
+                    loggedIn: true,
+                    email: decoded.sub,
+                    anonymousName: decoded.anonymousName
+                });
+            } catch (e) {
+                console.error("Failed to decode token", e);
+                setUser(null);
+                localStorage.removeItem('token'); // Clean up bad token
+            }
         }
         setLoading(false);
     }, [token]);
 
     const login = async (email, password) => {
         const res = await api.post('/auth/login', { email, password });
-        const newToken = res.data.token;
+        console.log("Login Response Data:", res.data); // Debug
+        let newToken = res.data.token;
+        if (typeof newToken === 'string') {
+            // Remove potential double quotes if backend sent raw string somehow (unlikely but possible)
+            newToken = newToken.replace(/^"|"$/g, '');
+        }
         localStorage.setItem('token', newToken);
         setToken(newToken);
         setUser({ loggedIn: true });
@@ -44,7 +60,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
-            {!loading && children}
+            {loading ? <div className="text-white text-center mt-20">Initializing Session...</div> : children}
         </AuthContext.Provider>
     );
 };

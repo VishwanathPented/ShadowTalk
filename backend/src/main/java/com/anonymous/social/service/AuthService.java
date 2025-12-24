@@ -45,7 +45,8 @@ public class AuthService {
     public String login(String email, String password) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
         var user = userRepository.findByEmail(email).orElseThrow();
-        return jwtUtil.generateToken(new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), java.util.Collections.emptyList()));
+        var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), java.util.Collections.emptyList());
+        return jwtUtil.generateToken(java.util.Map.of("anonymousName", user.getAnonymousName()), userDetails);
     }
 
     private String generateUniqueAnonymousName() {

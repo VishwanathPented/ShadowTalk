@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "group_chat_messages")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class GroupChatMessage {
 
     @Id
@@ -15,10 +16,12 @@ public class GroupChatMessage {
 
     @ManyToOne
     @JoinColumn(name = "group_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "messages"})
     private SocialGroup group;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password"})
     private User user;
 
     @Column(nullable = false, columnDefinition = "TEXT")
@@ -27,6 +30,11 @@ public class GroupChatMessage {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @ManyToOne
+    @JoinColumn(name = "reply_to_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"replyTo", "group"}) // Prevent deep recursion
+    private GroupChatMessage replyTo;
 
     public GroupChatMessage() {}
 
@@ -44,4 +52,7 @@ public class GroupChatMessage {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public GroupChatMessage getReplyTo() { return replyTo; }
+    public void setReplyTo(GroupChatMessage replyTo) { this.replyTo = replyTo; }
 }

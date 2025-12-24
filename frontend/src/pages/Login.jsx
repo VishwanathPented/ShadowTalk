@@ -24,7 +24,12 @@ const Login = () => {
             }
             navigate('/');
         } catch (error) {
-            toast.error(isLogin ? 'Login failed' : 'Signup failed');
+            console.error("Login Error:", error);
+            if (error.response) {
+                console.error("Response Data:", error.response.data);
+                console.error("Response Status:", error.response.status);
+            }
+            toast.error(isLogin ? 'Login failed: ' + (error.response?.data?.message || error.message) : 'Signup failed');
         } finally {
             setLoading(false);
         }

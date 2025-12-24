@@ -8,7 +8,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,10 +46,30 @@ public class ChatController {
 
         if (email == null || email.isEmpty()) {
              System.out.println("Error: Email is missing in payload and Principal is null.");
-             // Potentially throw error or handle gracefully
+             throw new IllegalArgumentException("User unauthenticated or email missing");
         }
 
         String message = payload.get("message");
-        return chatService.saveMessage(groupId, email, message);
+        String replyToIdStr = payload.get("replyToId");
+        Long replyToId = (replyToIdStr != null && !replyToIdStr.isEmpty()) ? Long.valueOf(replyToIdStr) : null;
+
+        return chatService.saveMessage(groupId, email, message, replyToId);
+    }
+
+    // Typing Status Endpoint
+    @MessageMapping("/chat/{groupId}/typing")
+    @SendTo("/topic/group/{groupId}/typing")
+    public Map<String, String> typingStatus(@DestinationVariable Long groupId,
+                                            @Payload Map<String, String> payload,
+                                            Principal principal) {
+        String email = principal != null ? principal.getName() : payload.get("email");
+        String isTyping = payload.get("isTyping"); // "true" or "false"
+        String anonymousName = payload.get("anonymousName"); // Pass this from frontend for UI
+
+        return Map.of(
+            "email", email != null ? email : "unknown",
+            "isTyping", isTyping,
+            "anonymousName", anonymousName != null ? anonymousName : "Someone"
+        );
     }
 }

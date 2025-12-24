@@ -11,55 +11,88 @@ import { useAuth } from '../context/AuthContext';
 // If 'global' is issue in Vite, we add: <script>window.global = window;</script> to index.html manually if needed.
 
 import Stomp from 'stompjs';
-import SockJS from "sockjs-client"; // Import explicitly dist
+import SockJS from 'sockjs-client/dist/sockjs'; // Explicit dist import for Vite compatibility
 import { jwtDecode } from "jwt-decode";
 import api from '../api/axios';
-import { HiPaperAirplane } from 'react-icons/hi';
+import { HiPaperAirplane, HiReply, HiX } from 'react-icons/hi';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ChatBox = ({ groupId }) => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
+    const [error, setError] = useState(null);
+    const [replyTo, setReplyTo] = useState(null);
+    const [typingUsers, setTypingUsers] = useState(new Set());
+    const typingTimeoutRef = useRef(null);
     const stompClientRef = useRef(null);
     const messagesEndRef = useRef(null);
-    const { user } = useAuth(); // We might need user email for local optimistic display, but real logic relies on backend
+    const { user } = useAuth();
 
     useEffect(() => {
         // Load history
         const loadHistory = async () => {
             try {
                 const res = await api.get(`/api/groups/${groupId}/messages`);
-                setMessages(res.data);
+                setMessages(res.data || []);
                 scrollToBottom();
             } catch (err) {
                 console.error("Failed to load chat history", err);
+                setError("Failed to load history");
             }
         };
         loadHistory();
 
         // Connect WebSocket
-        const wsUrl = 'http://localhost:8080/ws'; // SockJS endpoint
-        const socket = new SockJS(wsUrl);
-        const stompClient = Stomp.over(socket);
-        // stompClient.debug = () => { }; // Keep debug for now
+        let client = null;
+        try {
+            const wsUrl = 'http://localhost:8080/ws';
+            const socket = new SockJS(wsUrl);
+            client = Stomp.over(socket);
+            client.debug = null; // Disable debug logging for cleaner console
 
-        stompClient.connect({}, (frame) => {
-            console.log('Connected: ' + frame);
-            // Subscribe
-            stompClient.subscribe(`/topic/group/${groupId}`, (message) => {
-                const receivedMsg = JSON.parse(message.body);
-                setMessages((prev) => [...prev, receivedMsg]);
-                scrollToBottom();
+            client.connect({}, (frame) => {
+                console.log('Connected: ' + frame);
+                setError(null);
+                // Chat Subscription
+                client.subscribe(`/topic/group/${groupId}`, (message) => {
+                    const receivedMsg = JSON.parse(message.body);
+                    setMessages((prev) => [...prev, receivedMsg]);
+                    scrollToBottom();
+                });
+
+                // Typing Subscription
+                client.subscribe(`/topic/group/${groupId}/typing`, (message) => {
+                    const data = JSON.parse(message.body);
+                    if (data.email === user?.email) return; // Ignore self
+
+                    setTypingUsers(prev => {
+                        const newSet = new Set(prev);
+                        if (data.isTyping === "true") {
+                            newSet.add(data.anonymousName);
+                        } else {
+                            newSet.delete(data.anonymousName);
+                        }
+                        return newSet;
+                    });
+                });
+            }, (err) => {
+                console.error('STOMP connection error', err);
+                const msg = err && typeof err === 'object' && err.headers && err.headers.message ? err.headers.message : "Connection lost";
+                setError(msg);
             });
-        }, (error) => {
-            console.error('STOMP error', error);
-        });
 
-        stompClientRef.current = stompClient;
+            stompClientRef.current = client;
+        } catch (e) {
+            console.error("WebSocket init error", e);
+            setError("Failed to initialize chat");
+        }
 
         return () => {
-             if (stompClientRef.current) stompClientRef.current.disconnect();
+            if (client && client.connected) {
+                client.disconnect();
+            }
         };
-    }, [groupId]);
+    }, [groupId, user?.email]); // Add user?.email dependency
 
     const scrollToBottom = () => {
         setTimeout(() => {
@@ -83,11 +116,17 @@ const ChatBox = ({ groupId }) => {
         }
 
         if (stompClientRef.current && stompClientRef.current.connected) {
-            stompClientRef.current.send(`/app/chat/${groupId}`, {}, JSON.stringify({
+            const payload = {
                 email: email,
                 message: newMessage
-            }));
+            };
+            if (replyTo) {
+                payload.replyToId = replyTo.id.toString();
+            }
+
+            stompClientRef.current.send(`/app/chat/${groupId}`, {}, JSON.stringify(payload));
             setNewMessage('');
+            setReplyTo(null);
         } else {
             console.error("STOMP client is not connected");
         }
@@ -95,29 +134,78 @@ const ChatBox = ({ groupId }) => {
 
     return (
         <div className="flex flex-col h-[500px] bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            {error && <div className="bg-red-500/10 text-red-500 p-2 text-center text-sm">{error}</div>}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((msg, idx) => {
-                    const isMe = false; // Logic to detect self (email compare)
-                    // We need my email to know if it's me.
-                    // Let's assume consistent Anon names are the display.
+                <AnimatePresence initial={false}>
+                    {Array.isArray(messages) && messages.map((msg, idx) => {
+                        // Check if message is from me
+                        const isMe = user?.email && msg.user?.email === user.email;
 
-                    return (
-                        <div key={idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                            <span className="text-xs text-slate-500 mb-1 ml-1">{msg.user?.anonymousName || 'Unknown'}</span>
-                            <div className={`px-4 py-2 rounded-2xl max-w-[80%] ${isMe ? 'bg-brand-primary text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}`}>
-                                {msg.message}
-                            </div>
-                        </div>
-                    );
-                })}
+                        return (
+                            <motion.div
+                                key={msg.id || idx}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} group max-w-[80%]`}
+                            >
+                                <span className="text-xs text-slate-500 mb-1 ml-1">{msg.user?.anonymousName || 'Unknown'}</span>
+
+                                <div className={`flex items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                                    <img
+                                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(msg.user?.anonymousName || 'U')}&background=random&color=fff&size=32`}
+                                        alt="Avatar"
+                                        className="w-8 h-8 rounded-full shadow-md"
+                                    />
+                                    <div className={`px-4 py-2 rounded-2xl break-words relative ${isMe ? 'bg-brand-primary text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}`}>
+                                        {msg.replyTo && (
+                                            <div className={`text-xs mb-2 p-2 rounded border-l-2 ${isMe ? 'bg-white/10 border-white/50' : 'bg-black/20 border-slate-500'}`}>
+                                                <span className="font-bold block opacity-75">{msg.replyTo.user?.anonymousName || 'Unknown'}</span>
+                                                <span className="line-clamp-1 opacity-75">{msg.replyTo.message}</span>
+                                            </div>
+                                        )}
+                                        {msg.message}
+                                    </div>
+
+                                    <button
+                                        onClick={() => setReplyTo(msg)}
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-slate-500 hover:text-white"
+                                        title="Reply"
+                                    >
+                                        <HiReply className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+                </AnimatePresence>
                 <div ref={messagesEndRef} />
             </div>
+
+            {/* Typing Indicator */}
+            {typingUsers.size > 0 && (
+                <div className="px-4 py-1 text-xs text-slate-500 italic">
+                    {Array.from(typingUsers).join(", ")} {typingUsers.size === 1 ? 'is' : 'are'} typing...
+                </div>
+            )}
+
+            {replyTo && (
+                <div className="bg-slate-900/90 border-t border-slate-800 p-2 flex justify-between items-center px-4 backdrop-blur-sm">
+                    <div className="text-sm text-slate-300 border-l-2 border-brand-primary pl-2">
+                        <div className="text-brand-primary text-xs font-bold">Replying to {replyTo.user?.anonymousName}</div>
+                        <div className="line-clamp-1 opacity-75">{replyTo.message}</div>
+                    </div>
+                    <button onClick={() => setReplyTo(null)} className="text-slate-500 hover:text-white">
+                        <HiX className="w-5 h-5" />
+                    </button>
+                </div>
+            )}
 
             <form onSubmit={handleSendMessage} className="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
                 <input
                     type="text"
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={handleTyping}
                     placeholder="Type a message..."
                     className="flex-1 bg-slate-900 text-slate-200 px-4 py-2 rounded-full border border-slate-800 focus:border-brand-primary focus:outline-none"
                 />

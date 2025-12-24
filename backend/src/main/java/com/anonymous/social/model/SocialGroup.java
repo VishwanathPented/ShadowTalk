@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "social_groups")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class SocialGroup {
 
     @Id
@@ -20,6 +21,7 @@ public class SocialGroup {
 
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "groups"})
     private User createdBy;
 
     @Column(name = "is_private")

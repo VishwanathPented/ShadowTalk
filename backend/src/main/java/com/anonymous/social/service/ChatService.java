@@ -26,7 +26,7 @@ public class ChatService {
     @Autowired
     private WordFilterService wordFilterService;
 
-    public GroupChatMessage saveMessage(Long groupId, String email, String messageContent) {
+    public GroupChatMessage saveMessage(Long groupId, String email, String messageContent, Long replyToId) {
         if (wordFilterService.containsBannedWord(messageContent)) {
             throw new IllegalArgumentException("Message contains inappropriate language.");
         }
@@ -38,6 +38,10 @@ public class ChatService {
         chatMessage.setGroup(group);
         chatMessage.setUser(user);
         chatMessage.setMessage(messageContent);
+
+        if (replyToId != null) {
+            chatMessageRepository.findById(replyToId).ifPresent(chatMessage::setReplyTo);
+        }
 
         return chatMessageRepository.save(chatMessage);
     }
