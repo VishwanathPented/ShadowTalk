@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Feed from './pages/Feed'
 import Groups from './pages/Groups'
 import GroupDetail from './pages/GroupDetail'
+import PostDetail from './pages/PostDetail'
 import Layout from './components/Layout'
 
 // Protected Route Component
@@ -30,6 +31,7 @@ function App() {
                         <Route index element={<Feed />} />
                         <Route path="groups" element={<Groups />} />
                         <Route path="groups/:groupId" element={<GroupDetail />} />
+                        <Route path="posts/:postId" element={<PostDetail />} />
                     </Route>
                 </Routes>
             </AuthProvider>

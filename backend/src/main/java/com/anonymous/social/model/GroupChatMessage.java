@@ -36,6 +36,10 @@ public class GroupChatMessage {
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"replyTo", "group"}) // Prevent deep recursion
     private GroupChatMessage replyTo;
 
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("message")
+    private java.util.List<MessageReaction> reactions = new java.util.ArrayList<>();
+
     public GroupChatMessage() {}
 
     public Long getId() { return id; }
@@ -49,6 +53,9 @@ public class GroupChatMessage {
 
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+
+    public java.util.List<MessageReaction> getReactions() { return reactions; }
+    public void setReactions(java.util.List<MessageReaction> reactions) { this.reactions = reactions; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

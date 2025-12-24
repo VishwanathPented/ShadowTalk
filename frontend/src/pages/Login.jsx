@@ -7,6 +7,7 @@ const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [alias, setAlias] = useState('');
     const { login, signup } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -19,7 +20,7 @@ const Login = () => {
                 await login(email, password);
                 toast.success('Welcome back, ghost.');
             } else {
-                await signup(email, password);
+                await signup(email, password, alias);
                 toast.success('Account created anonymously.');
             }
             navigate('/');
@@ -46,6 +47,18 @@ const Login = () => {
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {!isLogin && (
+                        <div>
+                            <label className="block text-slate-400 text-sm mb-1">Alias (Optional)</label>
+                            <input
+                                type="text"
+                                value={alias}
+                                onChange={(e) => setAlias(e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
+                                placeholder="Choose your codename..."
+                            />
+                        </div>
+                    )}
                     <div>
                         <label className="block text-slate-400 text-sm mb-1">Email (Private)</label>
                         <input

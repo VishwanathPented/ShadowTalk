@@ -18,7 +18,12 @@ public class AuthController {
     public ResponseEntity<?> signup(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         String password = request.get("password");
-        return ResponseEntity.ok(authService.register(email, password));
+        String alias = request.get("alias");
+        try {
+            return ResponseEntity.ok(authService.register(email, password, alias));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 
     @PostMapping("/login")

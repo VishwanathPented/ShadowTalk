@@ -26,20 +26,43 @@ public class AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    private static final String[] ADJECTIVES = {"Silent", "Mysterious", "Hidden", "Shadow", "Ghost", "Unknown", "Secret", "Dark", "White", "Red", "Blue", "Fast", "Happy", "Sad", "Calm", "Brave"};
-    private static final String[] NOUNS = {"User", "Walker", "Talker", "Rider", "Dreamer", "Thinker", "Ninja", "Warrior", "Pilot", "Captain", "Wolf", "Tiger", "Eagle", "Falcon", "Bear"};
+    private static final String[] ADJECTIVES = {
+            "Cyber", "Neon", "Shadow", "Ghost", "Dark", "Rogue", "Silent", "Hidden", "Phantom", "Spectral",
+            "Void", "Null", "Binary", "Digital", "Electric", "Cosmic", "Lunar", "Solar", "Stellar", "Astral",
+            "Glitch", "Echo", "Misty", "Frozen", "Crimson", "Azure", "Golden", "Silver", "Iron", "Steel"
+    };
+    private static final String[] NOUNS = {
+            "Walker", "Runner", "Surfer", "Ninja", "Samurai", "Knight", "Wizard", "Mage", "Hacker", "Coder",
+            "Bot", "Droid", "Wolf", "Fox", "Tiger", "Lion", "Dragon", "Phoenix", "Viper", "Cobra",
+            "Raven", "Hawk", "Eagle", "Owl", "Shark", "Whale", "Bear", "Panda", "Koala", "Sloth"
+    };
 
-    public User register(String email, String password) {
+    public User register(String email, String password, String alias) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new RuntimeException("Email already in use");
+        }
+
+        String finalName;
+        if (alias != null && !alias.trim().isEmpty()) {
+            if (userRepository.existsByAnonymousName(alias)) {
+                throw new RuntimeException("Alias already taken");
+            }
+            finalName = alias;
+        } else {
+            finalName = generateUniqueAnonymousName();
         }
 
         User user = new User();
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-        user.setAnonymousName(generateUniqueAnonymousName());
+        user.setAnonymousName(finalName);
 
         return userRepository.save(user);
+    }
+
+    // Kept for backward compatibility if needed, though controller will update
+    public User register(String email, String password) {
+        return register(email, password, null);
     }
 
     public String login(String email, String password) {
@@ -56,7 +79,7 @@ public class AuthService {
             String adj = ADJECTIVES[random.nextInt(ADJECTIVES.length)];
             String noun = NOUNS[random.nextInt(NOUNS.length)];
             int number = random.nextInt(1000, 9999);
-            name = adj + "-" + noun + "-" + number;
+            name = adj + noun + "#" + number;
         } while (userRepository.existsByAnonymousName(name));
         return name;
     }

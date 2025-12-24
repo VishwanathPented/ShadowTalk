@@ -11,21 +11,28 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
+
+    private static final Logger logger = LoggerFactory.getLogger(PostController.class);
 
     @Autowired
     private PostService postService;
 
     @GetMapping
     public List<Post> getAllPosts() {
+        logger.info("Request received to get all posts");
         return postService.getAllPosts();
     }
 
     @PostMapping
     public ResponseEntity<?> createPost(@RequestBody Map<String, String> request,
                                         @AuthenticationPrincipal UserDetails userDetails) {
+        logger.info("Request received to create post for user: {}", userDetails.getUsername());
         try {
             return ResponseEntity.ok(postService.createPost(userDetails.getUsername(), request.get("content")));
         } catch (IllegalArgumentException e) {

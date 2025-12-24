@@ -6,7 +6,7 @@ const Navbar = () => {
     const { logout } = useAuth();
 
     return (
-        <nav className="fixed bottom-0 w-full bg-brand-dark/90 backdrop-blur-md border-t border-slate-800 md:top-0 md:bottom-auto md:border-b md:border-t-0 z-50">
+        <nav className="fixed bottom-0 w-full glass-panel md:top-0 md:bottom-auto z-50 rounded-none border-x-0 border-t md:border-b md:border-t-0">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <Link to="/" className="text-xl font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent hidden md:block">
                     GhostSocial

@@ -7,8 +7,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class PostService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PostService.class);
 
     @Autowired
     private PostRepository postRepository;
@@ -26,9 +31,13 @@ public class PostService {
     private RepostRepository repostRepository;
 
     @Autowired
+    private HashtagRepository hashtagRepository;
+
+    @Autowired
     private WordFilterService wordFilterService;
 
     public Post createPost(String email, String content) {
+        logger.info("Creating post for user: {}", email);
         if (wordFilterService.containsBannedWord(content)) {
             throw new IllegalArgumentException("Post contains inappropriate language.");
         }
@@ -36,11 +45,30 @@ public class PostService {
         Post post = new Post();
         post.setUser(user);
         post.setContent(content);
+
+        processHashtags(content);
+
         return postRepository.save(post);
     }
 
+    private void processHashtags(String content) {
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("#\\w+");
+        java.util.regex.Matcher matcher = pattern.matcher(content);
+        while (matcher.find()) {
+            String tag = matcher.group().substring(1); // remove #
+            Hashtag hashtag = hashtagRepository.findByName(tag)
+                    .orElse(new Hashtag(tag));
+            if (hashtag.getId() != null) {
+                hashtag.incrementUsage();
+            }
+            hashtagRepository.save(hashtag);
+        }
+    }
+
     public List<Post> getAllPosts() {
-        return postRepository.findAllByOrderByCreatedAtDesc();
+        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+        logger.info("Retrieved {} posts", posts.size());
+        return posts;
     }
 
     public void likePost(Long postId, String email) {

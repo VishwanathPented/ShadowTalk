@@ -65,16 +65,16 @@ const Groups = () => {
                 </div>
 
                 {showCreate && (
-                    <form onSubmit={handleCreate} className="bg-slate-900 p-4 rounded-xl border border-slate-800 mb-6">
+                    <form onSubmit={handleCreate} className="glass-panel p-6 rounded-xl mb-6">
                         <input
-                            className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-white mb-2"
+                            className="w-full bg-slate-950/50 border border-slate-700/50 rounded p-2 text-white mb-2 focus:border-brand-primary"
                             placeholder="Group Name"
                             value={newGroup.name}
                             onChange={e => setNewGroup({ ...newGroup, name: e.target.value })}
                             required
                         />
                         <input
-                            className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-white mb-2"
+                            className="w-full bg-slate-950/50 border border-slate-700/50 rounded p-2 text-white mb-2 focus:border-brand-primary"
                             placeholder="Description"
                             value={newGroup.description}
                             onChange={e => setNewGroup({ ...newGroup, description: e.target.value })}
@@ -83,14 +83,14 @@ const Groups = () => {
                             <label className="text-slate-400">Private?</label>
                             <input type="checkbox" checked={newGroup.isPrivate} onChange={e => setNewGroup({ ...newGroup, isPrivate: e.target.checked })} />
                         </div>
-                        <button type="submit" className="bg-brand-primary px-4 py-2 rounded text-white text-sm">Create Group</button>
+                        <button type="submit" className="bg-brand-primary hover:bg-brand-accent transition-colors px-4 py-2 rounded text-white text-sm">Create Group</button>
                     </form>
                 )}
 
                 <div className="grid gap-4">
                     {Array.isArray(groups) && groups.length > 0 ? (
                         groups.map(group => (
-                            <div key={group.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl hover:border-brand-primary/50 transition-colors">
+                            <div key={group.id} className="glass-card p-4 rounded-xl">
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <h3 className="font-bold text-lg text-brand-primary flex items-center gap-2">

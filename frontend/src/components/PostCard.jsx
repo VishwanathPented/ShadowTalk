@@ -1,5 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 import { HiHeart, HiChatAlt, HiRefresh } from 'react-icons/hi';
+import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
@@ -50,13 +51,16 @@ const PostCard = ({ post, refreshPosts }) => {
                     <HiHeart className="w-5 h-5" />
                     <span className="text-sm">Like</span>
                 </button>
-                <button
+
+
+
+                <Link
+                    to={`/posts/${post.id}`}
                     className="flex items-center gap-1 hover:text-blue-400 transition-colors"
-                // Link to detail page ideally
                 >
                     <HiChatAlt className="w-5 h-5" />
                     <span className="text-sm">Comment</span>
-                </button>
+                </Link>
                 <button
                     onClick={handleRepost}
                     className="flex items-center gap-1 hover:text-green-500 transition-colors"

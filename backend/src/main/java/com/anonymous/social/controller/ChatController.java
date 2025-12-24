@@ -72,4 +72,18 @@ public class ChatController {
             "anonymousName", anonymousName != null ? anonymousName : "Someone"
         );
     }
+
+    @MessageMapping("/chat/{groupId}/react")
+    @SendTo("/topic/group/{groupId}/react")
+    public GroupChatMessage reactToMessage(@DestinationVariable Long groupId,
+                                           @Payload Map<String, String> payload,
+                                           Principal principal) {
+        String email = principal != null ? principal.getName() : payload.get("email");
+        if (email == null) throw new IllegalArgumentException("Authentication required for reactions");
+
+        Long messageId = Long.valueOf(payload.get("messageId"));
+        String emoji = payload.get("emoji");
+
+        return chatService.addReaction(messageId, email, emoji);
+    }
 }

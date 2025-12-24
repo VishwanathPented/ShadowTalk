@@ -22,6 +22,7 @@ const ChatBox = ({ groupId }) => {
     const [newMessage, setNewMessage] = useState('');
     const [error, setError] = useState(null);
     const [replyTo, setReplyTo] = useState(null);
+    const [activeUsers, setActiveUsers] = useState([]);
     const [typingUsers, setTypingUsers] = useState(new Set());
     const typingTimeoutRef = useRef(null);
     const stompClientRef = useRef(null);
@@ -50,7 +51,10 @@ const ChatBox = ({ groupId }) => {
             client = Stomp.over(socket);
             client.debug = null; // Disable debug logging for cleaner console
 
-            client.connect({}, (frame) => {
+            const token = localStorage.getItem('token');
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+            client.connect(headers, (frame) => {
                 console.log('Connected: ' + frame);
                 setError(null);
                 // Chat Subscription
@@ -75,6 +79,17 @@ const ChatBox = ({ groupId }) => {
                         return newSet;
                     });
                 });
+
+                // Active Users Subscription
+                client.subscribe(`/topic/group/${groupId}/active`, (message) => {
+                    setActiveUsers(JSON.parse(message.body));
+                });
+
+                // Reaction Subscription
+                client.subscribe(`/topic/group/${groupId}/react`, (message) => {
+                    const updatedMessage = JSON.parse(message.body);
+                    setMessages((prev) => prev.map(msg => msg.id === updatedMessage.id ? updatedMessage : msg));
+                });
             }, (err) => {
                 console.error('STOMP connection error', err);
                 const msg = err && typeof err === 'object' && err.headers && err.headers.message ? err.headers.message : "Connection lost";
@@ -98,6 +113,63 @@ const ChatBox = ({ groupId }) => {
         setTimeout(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }, 100);
+    };
+
+    const handleTyping = (e) => {
+        setNewMessage(e.target.value);
+
+        if (!stompClientRef.current || !stompClientRef.current.connected) return;
+
+        // Clear existing timeout
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+        // Send typing started
+        const token = localStorage.getItem('token');
+        let email = '';
+        let anonymousName = user?.anonymousName || 'Anonymous';
+
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                email = decoded.sub;
+            } catch (err) { }
+        }
+
+        stompClientRef.current.send(`/app/chat/${groupId}/typing`, {}, JSON.stringify({
+            email: email,
+            anonymousName: anonymousName,
+            isTyping: "true"
+        }));
+
+        // Set timeout to stop typing
+        typingTimeoutRef.current = setTimeout(() => {
+            if (stompClientRef.current && stompClientRef.current.connected) {
+                stompClientRef.current.send(`/app/chat/${groupId}/typing`, {}, JSON.stringify({
+                    email: email,
+                    anonymousName: anonymousName,
+                    isTyping: "false"
+                }));
+            }
+        }, 2000);
+    };
+
+    const handleReaction = (messageId, emoji) => {
+        if (!stompClientRef.current || !stompClientRef.current.connected) return;
+
+        const token = localStorage.getItem('token');
+        let email = '';
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                email = decoded.sub;
+            } catch (err) { }
+        }
+
+        stompClientRef.current.send(`/app/chat/${groupId}/react`, {}, JSON.stringify({
+            messageId: messageId.toString(),
+            emoji: emoji,
+            email: email
+        }));
     };
 
     const handleSendMessage = (e) => {
@@ -133,8 +205,28 @@ const ChatBox = ({ groupId }) => {
     };
 
     return (
-        <div className="flex flex-col h-[500px] bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        <div className="flex flex-col h-[500px] glass-panel rounded-xl overflow-hidden">
             {error && <div className="bg-red-500/10 text-red-500 p-2 text-center text-sm">{error}</div>}
+
+            {/* Active Users */}
+            {activeUsers && activeUsers.length > 0 && (
+                <div className="bg-black/20 p-2 flex items-center border-b border-white/5 px-4 gap-2">
+                    <div className="flex -space-x-2">
+                        {activeUsers.slice(0, 5).map((u, i) => (
+                            <img
+                                key={i}
+                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(u)}&background=random&color=fff&size=24`}
+                                alt={u}
+                                title={u}
+                                className="w-6 h-6 rounded-full border border-slate-900"
+                            />
+                        ))}
+                    </div>
+                    {activeUsers.length > 5 && <span className="text-xs text-slate-500">+{activeUsers.length - 5}</span>}
+                    <span className="text-xs text-brand-primary font-medium animate-pulse">● {activeUsers.length} Online</span>
+                </div>
+            )}
+
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 <AnimatePresence initial={false}>
                     {Array.isArray(messages) && messages.map((msg, idx) => {
@@ -165,15 +257,41 @@ const ChatBox = ({ groupId }) => {
                                             </div>
                                         )}
                                         {msg.message}
+
+                                        {/* Reactions Display */}
+                                        {msg.reactions && msg.reactions.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-1 -mb-1">
+                                                {Object.entries(msg.reactions.reduce((acc, r) => {
+                                                    acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                                                    return acc;
+                                                }, {})).map(([emoji, count]) => (
+                                                    <span key={emoji} className="text-xs bg-black/20 rounded px-1">{emoji} {count > 1 ? count : ''}</span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <button
-                                        onClick={() => setReplyTo(msg)}
-                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-slate-500 hover:text-white"
-                                        title="Reply"
-                                    >
-                                        <HiReply className="w-4 h-4" />
-                                    </button>
+                                    {/* Action Buttons (Reply & React) */}
+                                    <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => setReplyTo(msg)}
+                                            className="p-1 text-slate-500 hover:text-white"
+                                            title="Reply"
+                                        >
+                                            <HiReply className="w-4 h-4" />
+                                        </button>
+                                        <div className="flex gap-1">
+                                            {['❤️', '😂', '🔥', '👍'].map(emoji => (
+                                                <button
+                                                    key={emoji}
+                                                    onClick={() => handleReaction(msg.id, emoji)}
+                                                    className="text-xs hover:scale-125 transition-transform"
+                                                >
+                                                    {emoji}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </motion.div>
                         );

@@ -46,6 +46,36 @@ public class ChatService {
         return chatMessageRepository.save(chatMessage);
     }
 
+    @Autowired
+    private com.anonymous.social.repository.MessageReactionRepository reactionRepository;
+
+    public GroupChatMessage addReaction(Long messageId, String email, String emoji) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        GroupChatMessage message = chatMessageRepository.findById(messageId).orElseThrow(() -> new IllegalArgumentException("Message not found"));
+
+        // Check if reaction already exists
+        com.anonymous.social.model.MessageReaction existingReaction = reactionRepository.findByMessageIdAndUserId(messageId, user.getId()).orElse(null);
+
+        if (existingReaction != null) {
+            if (existingReaction.getEmoji().equals(emoji)) {
+                // If same emoji, remove it (toggle off)
+                reactionRepository.delete(existingReaction);
+                message.getReactions().remove(existingReaction);
+            } else {
+                // If different, update it
+                existingReaction.setEmoji(emoji);
+                reactionRepository.save(existingReaction);
+            }
+        } else {
+            // New reaction
+            com.anonymous.social.model.MessageReaction reaction = new com.anonymous.social.model.MessageReaction(message, user, emoji);
+            reactionRepository.save(reaction);
+            message.getReactions().add(reaction);
+        }
+
+        return chatMessageRepository.save(message);
+    }
+
     public List<GroupChatMessage> getGroupMessages(Long groupId) {
         return chatMessageRepository.findByGroupIdOrderByCreatedAtAsc(groupId);
     }
