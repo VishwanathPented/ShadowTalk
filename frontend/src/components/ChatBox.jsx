@@ -262,65 +262,75 @@ const ChatBox = ({ groupId }) => {
                                 style={{ filter: isMe ? 'none' : undefined }}
                                 onClick={(e) => e.currentTarget.style.filter = 'none'} // Unblur on click for mobile
                             >
-                                <span className={`text-xs text-slate-500 mb-1 ml-1 flex items-center gap-1 ${isTopMessage ? 'text-amber-400 font-bold' : ''}`}>
-                                    {isTopMessage && '👑'} {msg.user?.anonymousName || 'Unknown'}
-                                </span>
-
-                                <div className={`flex items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                                    <img
-                                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(msg.user?.anonymousName || 'U')}&background=random&color=fff&size=32`}
-                                        alt="Avatar"
-                                        className={`w-8 h-8 rounded-full shadow-md ${isTopMessage ? 'ring-2 ring-amber-500 animate-pulse' : ''}`}
-                                    />
-                                    <div className={`px-4 py-2 rounded-2xl break-words relative shadow-lg transition-all duration-300 ${isMe
-                                        ? 'bg-gradient-to-r from-brand-primary to-purple-600 text-white rounded-tr-none'
-                                        : isTopMessage
-                                            ? 'bg-slate-800/90 text-slate-100 rounded-tl-none border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                                            : 'bg-slate-800/80 backdrop-blur-sm text-slate-200 rounded-tl-none border border-white/5'
-                                        }`}>
-                                        {msg.replyTo && (
-                                            <div className={`text-xs mb-2 p-2 rounded border-l-2 ${isMe ? 'bg-white/10 border-white/50' : 'bg-black/20 border-slate-500'}`}>
-                                                <span className="font-bold block opacity-75">{msg.replyTo.user?.anonymousName || 'Unknown'}</span>
-                                                <span className="line-clamp-1 opacity-75">{msg.replyTo.message}</span>
-                                            </div>
-                                        )}
-                                        {msg.message}
-
-                                        {/* Reactions Display */}
-                                        {msg.reactions && msg.reactions.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mt-1 -mb-1">
-                                                {Object.entries(msg.reactions.reduce((acc, r) => {
-                                                    acc[r.emoji] = (acc[r.emoji] || 0) + 1;
-                                                    return acc;
-                                                }, {})).map(([emoji, count]) => (
-                                                    <span key={emoji} className="text-xs bg-black/20 rounded px-1">{emoji} {count > 1 ? count : ''}</span>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Action Buttons (Reply & React) */}
-                                    <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
-                                            onClick={() => setReplyTo(msg)}
-                                            className="p-1 text-slate-500 hover:text-white"
-                                            title="Reply"
-                                        >
-                                            <HiReply className="w-4 h-4" />
-                                        </button>
-                                        <div className="flex gap-1">
-                                            {['❤️', '😂', '🔥', '👍'].map(emoji => (
-                                                <button
-                                                    key={emoji}
-                                                    onClick={() => handleReaction(msg.id, emoji)}
-                                                    className="text-xs hover:scale-125 transition-transform"
-                                                >
-                                                    {emoji}
-                                                </button>
-                                            ))}
+                                {msg.message.startsWith('[SYSTEM]') ? (
+                                    <div className="w-full flex justify-center my-2">
+                                        <div className="bg-slate-800/80 border border-brand-accent/30 text-brand-accent px-4 py-1 rounded-full text-xs font-bold shadow-lg backdrop-blur-sm animate-pulse">
+                                            {msg.message.replace('[SYSTEM]', '').trim()}
                                         </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    <>
+                                        <span className={`text-xs text-slate-500 mb-1 ml-1 flex items-center gap-1 ${isTopMessage ? 'text-amber-400 font-bold' : ''}`}>
+                                            {isTopMessage && '👑'} {msg.user?.anonymousName || 'Unknown'}
+                                        </span>
+
+                                        <div className={`flex items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                                            <img
+                                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(msg.user?.anonymousName || 'U')}&background=random&color=fff&size=32`}
+                                                alt="Avatar"
+                                                className={`w-8 h-8 rounded-full shadow-md ${isTopMessage ? 'ring-2 ring-amber-500 animate-pulse' : ''}`}
+                                            />
+                                            <div className={`px-4 py-2 rounded-2xl break-words relative shadow-lg transition-all duration-300 ${isMe
+                                                ? 'bg-gradient-to-r from-brand-primary to-purple-600 text-white rounded-tr-none'
+                                                : isTopMessage
+                                                    ? 'bg-slate-800/90 text-slate-100 rounded-tl-none border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                                                    : 'bg-slate-800/80 backdrop-blur-sm text-slate-200 rounded-tl-none border border-white/5'
+                                                }`}>
+                                                {msg.replyTo && (
+                                                    <div className={`text-xs mb-2 p-2 rounded border-l-2 ${isMe ? 'bg-white/10 border-white/50' : 'bg-black/20 border-slate-500'}`}>
+                                                        <span className="font-bold block opacity-75">{msg.replyTo.user?.anonymousName || 'Unknown'}</span>
+                                                        <span className="line-clamp-1 opacity-75">{msg.replyTo.message}</span>
+                                                    </div>
+                                                )}
+                                                {msg.message}
+
+                                                {/* Reactions Display */}
+                                                {msg.reactions && msg.reactions.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1 mt-1 -mb-1">
+                                                        {Object.entries(msg.reactions.reduce((acc, r) => {
+                                                            acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                                                            return acc;
+                                                        }, {})).map(([emoji, count]) => (
+                                                            <span key={emoji} className="text-xs bg-black/20 rounded px-1">{emoji} {count > 1 ? count : ''}</span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Action Buttons (Reply & React) */}
+                                            <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => setReplyTo(msg)}
+                                                    className="p-1 text-slate-500 hover:text-white"
+                                                    title="Reply"
+                                                >
+                                                    <HiReply className="w-4 h-4" />
+                                                </button>
+                                                <div className="flex gap-1">
+                                                    {['❤️', '😂', '🔥', '👍'].map(emoji => (
+                                                        <button
+                                                            key={emoji}
+                                                            onClick={() => handleReaction(msg.id, emoji)}
+                                                            className="text-xs hover:scale-125 transition-transform"
+                                                        >
+                                                            {emoji}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </motion.div>
                         );
                     })}

@@ -65,11 +65,15 @@ public class AuthService {
         return register(email, password, null);
     }
 
-    public String login(String email, String password) {
+    @Autowired
+    private com.anonymous.social.repository.PostRepository postRepository;
+
+    public java.util.Map<String, Object> login(String email, String password) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
         var user = userRepository.findByEmail(email).orElseThrow();
         var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), java.util.Collections.emptyList());
-        return jwtUtil.generateToken(java.util.Map.of("anonymousName", user.getAnonymousName()), userDetails);
+        String token = jwtUtil.generateToken(java.util.Map.of("anonymousName", user.getAnonymousName()), userDetails);
+        return buildAuthResponse(user, token);
     }
 
     public User findByEmail(String email) {
@@ -104,4 +108,41 @@ public class AuthService {
         } while (userRepository.existsByAnonymousName(name));
         return name;
     }
+
+    public java.util.Map<String, Object> regenerateIdentity(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        String newName = generateUniqueAnonymousName();
+
+        user.setAnonymousName(newName);
+        userRepository.save(user);
+
+        var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), java.util.Collections.emptyList());
+        String newToken = jwtUtil.generateToken(java.util.Map.of("anonymousName", user.getAnonymousName()), userDetails);
+
+        return buildAuthResponse(user, newToken);
+    }
+
+    public java.util.Map<String, Object> getMyProfile(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        // For /me endpoint, we don't necessarily need to reissue a token, but returning one is fine.
+        // Or we can accept null token and just not return it.
+        return buildAuthResponse(user, null);
+    }
+
+    private java.util.Map<String, Object> buildAuthResponse(User user, String token) {
+        long postCount = postRepository.countByUser(user);
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        if (token != null) {
+            response.put("token", token);
+        }
+        response.put("anonymousName", user.getAnonymousName());
+        response.put("reputationScore", user.getReputationScore());
+        response.put("postCount", postCount);
+        response.put("createdAt", user.getCreatedAt() != null ? user.getCreatedAt().toString() : "");
+        response.put("avatarColor", user.getAvatarColor() != null ? user.getAvatarColor() : "#6366f1");
+        response.put("role", user.getRole());
+        return response;
+    }
+
+
 }

@@ -6,6 +6,7 @@ import Feed from './pages/Feed'
 import Groups from './pages/Groups'
 import GroupDetail from './pages/GroupDetail'
 import PostDetail from './pages/PostDetail'
+import AdminDashboard from './pages/AdminDashboard'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
 
@@ -35,8 +36,15 @@ function App() {
                             <Route path="feed" element={<Feed />} />
                             <Route path="groups" element={<Groups />} />
                             <Route path="groups/:groupId" element={<GroupDetail />} />
+                            <Route path="groups/:groupId" element={<GroupDetail />} />
                             <Route path="posts/:postId" element={<PostDetail />} />
                         </Route>
+
+                        <Route path="/shadow" element={
+                            <ProtectedRoute>
+                                <AdminDashboard />
+                            </ProtectedRoute>
+                        } />
                     </Routes>
                 </AuthProvider>
             </BrowserRouter>

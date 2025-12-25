@@ -31,10 +31,23 @@ public class AuthController {
         String email = request.get("email");
         String password = request.get("password");
         try {
-            String token = authService.login(email, password);
-            return ResponseEntity.ok(Map.of("token", token));
+            Map<String, Object> response = authService.login(email, password);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(403).body("Invalid credentials");
+        }
+    }
+
+    @PostMapping("/regenerate-identity")
+    public ResponseEntity<?> regenerateIdentity(@RequestHeader("Authorization") String token) {
+        try {
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            String email = authService.extractEmail(token);
+            return ResponseEntity.ok(authService.regenerateIdentity(email));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("message", "Failed to regenerate identity: " + e.getMessage()));
         }
     }
 }

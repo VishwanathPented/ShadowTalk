@@ -8,6 +8,17 @@ import { HiFire } from 'react-icons/hi';
 const Feed = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('latest');
+
+    const getSortedPosts = () => {
+        const sorted = [...posts];
+        if (filter === 'top') {
+            sorted.sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
+        } else {
+            sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+        return sorted;
+    };
 
     const fetchPosts = async () => {
         try {
@@ -45,8 +56,8 @@ const Feed = () => {
                         <button
                             onClick={() => setFilter('latest')}
                             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${filter === 'latest'
-                                    ? 'bg-gradient-to-r from-brand-primary to-brand-accent text-white shadow-lg'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-gradient-to-r from-brand-primary to-brand-accent text-white shadow-lg'
+                                : 'text-slate-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             <span>🕒</span> Recently Posted
@@ -54,8 +65,8 @@ const Feed = () => {
                         <button
                             onClick={() => setFilter('top')}
                             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${filter === 'top'
-                                    ? 'bg-gradient-to-r from-brand-primary to-brand-accent text-white shadow-lg'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-gradient-to-r from-brand-primary to-brand-accent text-white shadow-lg'
+                                : 'text-slate-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             <span>🔥</span> Most Liked
@@ -97,15 +108,7 @@ const Feed = () => {
             <div className="lg:col-span-1 hidden lg:block sticky top-24 h-fit">
                 <TrendingSidebar />
 
-                {/* Mini Footer / Info */}
-                <div className="mt-8 text-center text-xs text-slate-600">
-                    <p>&copy; 2024 ShadowTalk Network</p>
-                    <div className="flex justify-center gap-2 mt-2">
-                        <span className="hover:text-slate-400 cursor-pointer">Privacy</span>
-                        <span>•</span>
-                        <span className="hover:text-slate-400 cursor-pointer">Protocol</span>
-                    </div>
-                </div>
+
             </div>
         </div>
     );

@@ -11,23 +11,41 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
+    const fetchProfile = async () => {
+        try {
+            const res = await api.get('/auth/me');
+            setUser({
+                loggedIn: true,
+                ...res.data
+            });
+        } catch (err) {
+            console.error("Failed to fetch profile", err);
+            // Don't log out immediately on benign network error, but if 401, maybe.
+            // keeping simple:
+        }
+    };
+
     useEffect(() => {
         if (token) {
+            // Initial decode for fast UI
             try {
-                console.log("Attempting to decode token:", token);
                 const decoded = jwtDecode(token);
-                console.log("Decoded successfully:", decoded);
-                // Spring Security usually puts email/username in 'sub'
-                // We also get 'anonymousName' from our custom claim
-                setUser({
+                // Set basic user first
+                setUser(prev => ({
+                    ...(prev || {}),
                     loggedIn: true,
                     email: decoded.sub,
-                    anonymousName: decoded.anonymousName
-                });
+                    anonymousName: decoded.anonymousName,
+                    role: decoded.role || 'USER' // fallback
+                }));
+
+                // Then fetch rich data
+                fetchProfile();
+
             } catch (e) {
                 console.error("Failed to decode token", e);
                 setUser(null);
-                localStorage.removeItem('token'); // Clean up bad token
+                localStorage.removeItem('token');
             }
         }
         setLoading(false);
@@ -35,15 +53,15 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         const res = await api.post('/auth/login', { email, password });
-        console.log("Login Response Data:", res.data); // Debug
-        let newToken = res.data.token;
+        // The backend now returns the full map, so we can set user immediately without extra fetch
+        const data = res.data;
+        let newToken = data.token;
         if (typeof newToken === 'string') {
-            // Remove potential double quotes if backend sent raw string somehow (unlikely but possible)
             newToken = newToken.replace(/^"|"$/g, '');
         }
         localStorage.setItem('token', newToken);
         setToken(newToken);
-        setUser({ loggedIn: true });
+        setUser({ loggedIn: true, ...data });
         return true;
     };
 
@@ -58,10 +76,33 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    const regenerateIdentity = async () => {
+        try {
+            const res = await api.post('/auth/regenerate-identity');
+            // The backend returns the new token AND user stats
+            const data = res.data;
+            let newToken = data.token;
+
+            if (newToken) {
+                if (typeof newToken === 'string') {
+                    newToken = newToken.replace(/^"|"$/g, '');
+                }
+                localStorage.setItem('token', newToken);
+                setToken(newToken);
+                setUser({ loggedIn: true, ...data }); // Update immediatley
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error("Identity regeneration failed:", error);
+            throw error;
+        }
+    };
+
 
 
     return (
-        <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, signup, logout, regenerateIdentity, loading }}>
             {loading ? <div className="text-white text-center mt-20">Initializing Session...</div> : children}
         </AuthContext.Provider>
     );

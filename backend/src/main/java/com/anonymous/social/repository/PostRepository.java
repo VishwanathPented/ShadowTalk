@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllByOrderByCreatedAtDesc();
+    long countByUser(com.anonymous.social.model.User user);
 }

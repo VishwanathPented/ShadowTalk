@@ -1,10 +1,11 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { HiX, HiLightningBolt } from 'react-icons/hi';
 
 const ProfileModal = ({ onClose }) => {
-    const { user } = useAuth();
+    const { user, regenerateIdentity } = useAuth();
     const modalRef = useRef(null);
+    const [isRegenerating, setIsRegenerating] = useState(false);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -16,6 +17,20 @@ const ProfileModal = ({ onClose }) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
+
+    const handleRegenerate = async () => {
+        if (window.confirm("Are you sure? This will permanently erase your current alias and generate a new one.")) {
+            setIsRegenerating(true);
+            try {
+                await regenerateIdentity();
+                // Optional: Show success toast or animation
+            } catch (err) {
+                alert("Failed to regenerate identity. Try again.");
+            } finally {
+                setIsRegenerating(false);
+            }
+        }
+    };
 
     if (!user) return null;
 
@@ -66,13 +81,32 @@ const ProfileModal = ({ onClose }) => {
                                 <span className="text-xs font-bold uppercase tracking-wider">Posts</span>
                             </div>
                             <div className="text-2xl font-bold text-white">
-                                - {/* TODO: Add post count to User DTO */}
+                                {user.postCount || 0}
                             </div>
                         </div>
                     </div>
+                    {user.createdAt && (
+                        <div className="text-xs text-slate-500 mb-4">
+                            Joined: {new Date(user.createdAt).toLocaleDateString()}
+                        </div>
+                    )}
 
-                    <button className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition-colors border border-slate-700">
-                        Regenerate Identity (Soon)
+                    <button
+                        onClick={handleRegenerate}
+                        disabled={isRegenerating}
+                        className="w-full py-3 bg-red-600/20 hover:bg-red-600/30 text-red-500 hover:text-red-400 font-bold rounded-xl transition-all duration-300 border border-red-900/50 shadow-[0_0_10px_rgba(220,38,38,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {isRegenerating ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                Rerolling...
+                            </>
+                        ) : (
+                            <>
+                                <span className="text-lg">🎲</span>
+                                Burn Identity & Reborn
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
