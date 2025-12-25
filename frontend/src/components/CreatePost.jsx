@@ -25,24 +25,28 @@ const CreatePost = ({ onPostCreated }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6 shadow-lg shadow-brand-primary/5">
+        <form onSubmit={handleSubmit} className="bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 mb-8 shadow-xl relative overflow-hidden group hover:border-brand-primary/30 transition-all duration-500">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-primary to-brand-accent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
             <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Share your secrets anonymously..."
-                className="w-full bg-slate-950 text-slate-200 p-3 rounded-lg border border-slate-800 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none resize-none transition-all placeholder:text-slate-600"
-                rows="3"
+                placeholder="What whispers in the dark?..."
+                className="w-full bg-slate-950/50 text-slate-100 p-4 rounded-xl border border-slate-800/60 focus:border-brand-primary/50 focus:ring-0 focus:bg-slate-950/80 outline-none resize-none transition-all placeholder:text-slate-600 text-lg leading-relaxed min-h-[120px]"
                 maxLength={280}
             />
-            <div className="flex justify-between items-center mt-3">
-                <span className="text-slate-600 text-xs">{content.length}/280</span>
+
+            <div className="flex justify-between items-center mt-4 px-1">
+                <div className={`text-xs font-medium transition-colors ${content.length > 250 ? 'text-red-400' : 'text-slate-500'}`}>
+                    {280 - content.length} chars remaining
+                </div>
                 <button
                     type="submit"
                     disabled={loading || !content.trim()}
-                    className="bg-brand-primary hover:bg-brand-accent text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-gradient-to-r from-brand-primary to-brand-accent hover:shadow-lg hover:shadow-brand-primary/25 text-white px-6 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
-                    <span>Post</span>
-                    <HiPaperAirplane className="w-4 h-4 rotate-90" />
+                    <span>Broadcast</span>
+                    <HiPaperAirplane className={`w-4 h-4 rotate-90 ${loading ? 'animate-pulse' : ''}`} />
                 </button>
             </div>
         </form>

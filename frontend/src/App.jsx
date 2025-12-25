@@ -7,6 +7,7 @@ import Groups from './pages/Groups'
 import GroupDetail from './pages/GroupDetail'
 import PostDetail from './pages/PostDetail'
 import Layout from './components/Layout'
+import ErrorBoundary from './components/ErrorBoundary'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -19,25 +20,27 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
     return (
-        <BrowserRouter>
-            <AuthProvider>
-                <Routes>
-                    <Route path="/" element={<LandingPage />} />
-                    <Route path="/login" element={<Login />} />
+        <ErrorBoundary>
+            <BrowserRouter>
+                <AuthProvider>
+                    <Routes>
+                        <Route path="/" element={<LandingPage />} />
+                        <Route path="/login" element={<Login />} />
 
-                    <Route path="/" element={
-                        <ProtectedRoute>
-                            <Layout />
-                        </ProtectedRoute>
-                    }>
-                        <Route path="feed" element={<Feed />} />
-                        <Route path="groups" element={<Groups />} />
-                        <Route path="groups/:groupId" element={<GroupDetail />} />
-                        <Route path="posts/:postId" element={<PostDetail />} />
-                    </Route>
-                </Routes>
-            </AuthProvider>
-        </BrowserRouter>
+                        <Route path="/" element={
+                            <ProtectedRoute>
+                                <Layout />
+                            </ProtectedRoute>
+                        }>
+                            <Route path="feed" element={<Feed />} />
+                            <Route path="groups" element={<Groups />} />
+                            <Route path="groups/:groupId" element={<GroupDetail />} />
+                            <Route path="posts/:postId" element={<PostDetail />} />
+                        </Route>
+                    </Routes>
+                </AuthProvider>
+            </BrowserRouter>
+        </ErrorBoundary>
     )
 }
 

@@ -39,13 +39,20 @@ const Feed = () => {
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
                     </div>
                 ) : (
-                    <div className="space-y-4">
-                        {posts.map(post => (
-                            <PostCard key={post.id} post={post} refreshPosts={fetchPosts} />
+                    <div className="space-y-6">
+                        {posts.map((post, index) => (
+                            <div
+                                key={post.id}
+                                className="animate-fade-in-up"
+                                style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
+                            >
+                                <PostCard post={post} refreshPosts={fetchPosts} />
+                            </div>
                         ))}
                         {posts.length === 0 && (
-                            <div className="text-center text-slate-500 py-10">
-                                It's quiet in the void... be the first to whisper.
+                            <div className="text-center py-20 bg-slate-900/40 rounded-2xl border border-slate-800/50 backdrop-blur-sm">
+                                <p className="text-slate-500 text-lg mb-2">It's quiet in the void...</p>
+                                <p className="text-slate-600 text-sm">Be the first to whisper.</p>
                             </div>
                         )}
                     </div>

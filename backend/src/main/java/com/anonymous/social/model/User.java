@@ -24,6 +24,14 @@ public class User {
     @Column(name = "anonymous_name", unique = true, nullable = false)
     private String anonymousName;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private java.util.List<Persona> personas = new java.util.ArrayList<>();
+
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "active_persona_id")
+    private Persona activePersona;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -49,6 +57,12 @@ public class User {
 
     public String getAnonymousName() { return anonymousName; }
     public void setAnonymousName(String anonymousName) { this.anonymousName = anonymousName; }
+
+    public java.util.List<Persona> getPersonas() { return personas; }
+    public void setPersonas(java.util.List<Persona> personas) { this.personas = personas; }
+
+    public Persona getActivePersona() { return activePersona; }
+    public void setActivePersona(Persona activePersona) { this.activePersona = activePersona; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -72,7 +72,28 @@ public class AuthService {
         return jwtUtil.generateToken(java.util.Map.of("anonymousName", user.getAnonymousName()), userDetails);
     }
 
-    private String generateUniqueAnonymousName() {
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    public String extractEmail(String token) {
+        return jwtUtil.extractUsername(token);
+    }
+
+    public String generateRandomName() { // Renamed to match usage in PersonaService or keep unique name
+         return generateUniqueAnonymousName();
+    }
+
+    public User getUserFromToken(String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        String email = extractEmail(token);
+        return findByEmail(email);
+    }
+
+    public String generateUniqueAnonymousName() {
         Random random = new Random();
         String name;
         do {
