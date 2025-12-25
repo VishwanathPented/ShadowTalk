@@ -208,49 +208,74 @@ const ChatBox = ({ groupId }) => {
         <div className="flex flex-col h-[500px] glass-panel rounded-xl overflow-hidden">
             {error && <div className="bg-red-500/10 text-red-500 p-2 text-center text-sm">{error}</div>}
 
-            {/* Active Users */}
-            {activeUsers && activeUsers.length > 0 && (
-                <div className="bg-black/20 p-2 flex items-center border-b border-white/5 px-4 gap-2">
-                    <div className="flex -space-x-2">
-                        {activeUsers.slice(0, 5).map((u, i) => (
-                            <img
-                                key={i}
-                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(u)}&background=random&color=fff&size=24`}
-                                alt={u}
-                                title={u}
-                                className="w-6 h-6 rounded-full border border-slate-900"
-                            />
-                        ))}
-                    </div>
-                    {activeUsers.length > 5 && <span className="text-xs text-slate-500">+{activeUsers.length - 5}</span>}
-                    <span className="text-xs text-brand-primary font-medium animate-pulse">● {activeUsers.length} Online</span>
+            {/* Mood Indicator Bar */}
+            <div className="bg-slate-900 border-b border-slate-800 p-2 flex items-center justify-between px-4 transition-colors duration-500"
+                style={{
+                    borderColor: (() => {
+                        const recentReactions = messages.slice(-10).flatMap(m => m.reactions || []).map(r => r.emoji);
+                        const fireCount = recentReactions.filter(r => ['🔥', '😡'].includes(r)).length;
+                        const chillCount = recentReactions.filter(r => ['😂', '❤️', '👍'].includes(r)).length;
+                        if (fireCount > chillCount) return 'rgba(239, 68, 68, 0.5)'; // Red
+                        if (chillCount > fireCount) return 'rgba(168, 85, 247, 0.5)'; // Purple
+                        return 'rgba(51, 65, 85, 0.5)'; // Slate
+                    })()
+                }}
+            >
+                <div className="text-xs font-medium text-slate-400">
+                    Room Vibe: <span className="text-white">
+                        {(() => {
+                            const recentReactions = messages.slice(-10).flatMap(m => m.reactions || []).map(r => r.emoji);
+                            const fireCount = recentReactions.filter(r => ['🔥', '😡'].includes(r)).length;
+                            const chillCount = recentReactions.filter(r => ['😂', '❤️', '👍'].includes(r)).length;
+                            if (fireCount > chillCount) return '🔥 Heated';
+                            if (chillCount > fireCount) return '😎 Chill';
+                            return '😐 Neutral';
+                        })()}
+                    </span>
                 </div>
-            )}
+                {/* Active Users Summary */}
+                <div className="flex -space-x-2">
+                    {activeUsers.slice(0, 3).map((u, i) => (
+                        <img key={i} src={`https://ui-avatars.com/api/?name=${encodeURIComponent(u)}&background=random&color=fff&size=20`} className="w-5 h-5 rounded-full border border-slate-900" />
+                    ))}
+                    {activeUsers.length > 3 && <span className="text-[10px] text-slate-500 ml-2">+{activeUsers.length - 3}</span>}
+                </div>
+            </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 <AnimatePresence initial={false}>
                     {Array.isArray(messages) && messages.map((msg, idx) => {
-                        // Check if message is from me
                         const isMe = user?.email && msg.user?.email === user.email;
+
+                        // Upvote Analysis
+                        const upvoteCount = (msg.reactions || []).filter(r => r.emoji === '🔥').length;
+                        const isTopMessage = upvoteCount >= 3;
 
                         return (
                             <motion.div
                                 key={msg.id || idx}
-                                initial={{ opacity: 0, y: 10 }}
+                                initial={{ opacity: 0, y: 10, filter: isMe ? 'blur(0px)' : 'blur(4px)' }}
+                                whileHover={{ filter: 'blur(0px)' }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3 }}
-                                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} group max-w-[80%]`}
+                                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} group max-w-[80%] transition-all duration-500`}
+                                style={{ filter: isMe ? 'none' : undefined }}
+                                onClick={(e) => e.currentTarget.style.filter = 'none'} // Unblur on click for mobile
                             >
-                                <span className="text-xs text-slate-500 mb-1 ml-1">{msg.user?.anonymousName || 'Unknown'}</span>
+                                <span className={`text-xs text-slate-500 mb-1 ml-1 flex items-center gap-1 ${isTopMessage ? 'text-amber-400 font-bold' : ''}`}>
+                                    {isTopMessage && '👑'} {msg.user?.anonymousName || 'Unknown'}
+                                </span>
 
                                 <div className={`flex items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                                     <img
                                         src={`https://ui-avatars.com/api/?name=${encodeURIComponent(msg.user?.anonymousName || 'U')}&background=random&color=fff&size=32`}
                                         alt="Avatar"
-                                        className="w-8 h-8 rounded-full shadow-md"
+                                        className={`w-8 h-8 rounded-full shadow-md ${isTopMessage ? 'ring-2 ring-amber-500 animate-pulse' : ''}`}
                                     />
-                                    <div className={`px-4 py-2 rounded-2xl break-words relative shadow-lg ${isMe
-                                            ? 'bg-gradient-to-r from-brand-primary to-purple-600 text-white rounded-tr-none'
+                                    <div className={`px-4 py-2 rounded-2xl break-words relative shadow-lg transition-all duration-300 ${isMe
+                                        ? 'bg-gradient-to-r from-brand-primary to-purple-600 text-white rounded-tr-none'
+                                        : isTopMessage
+                                            ? 'bg-slate-800/90 text-slate-100 rounded-tl-none border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
                                             : 'bg-slate-800/80 backdrop-blur-sm text-slate-200 rounded-tl-none border border-white/5'
                                         }`}>
                                         {msg.replyTo && (

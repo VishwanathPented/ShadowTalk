@@ -1,18 +1,29 @@
 import { formatDistanceToNow } from 'date-fns';
-import { HiHeart, HiChatAlt, HiRefresh } from 'react-icons/hi';
+import { FaHeart, FaRegHeart, FaRegComment, FaRetweet, FaShare } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 
+import { useAuth } from '../context/AuthContext';
+
 const PostCard = ({ post, refreshPosts }) => {
-    const [liked, setLiked] = useState(false); // Quick local toggle, ideally sync with verification
+    const { user } = useAuth();
+
+    // Safety check for arrays
+    const likes = post.likes || [];
+    const comments = post.comments || [];
+    const reposts = post.reposts || [];
+
+    // Check if current user has liked
+    // Assuming backend returns user object in likes list. If not, we might need a different check.
+    // Based on PostLike.java: private User user;
+    const isLiked = likes.some(like => like.user?.email === user?.email);
 
     const handleLike = async () => {
         try {
             await api.post(`/api/posts/${post.id}/like`);
-            setLiked(!liked);
-            refreshPosts && refreshPosts(); // Ideally optimistic update
+            refreshPosts && refreshPosts();
         } catch (error) {
             toast.error('Failed to like post');
         }
@@ -38,9 +49,7 @@ const PostCard = ({ post, refreshPosts }) => {
                     <div>
                         <p className="text-white font-semibold text-sm tracking-wide group-hover:text-brand-primary transition-colors flex items-center gap-2">
                             {post.user.anonymousName}
-                            <span className="text-[10px] bg-slate-800 text-brand-primary px-1.5 py-0.5 rounded border border-slate-700/50 font-mono" title="Shadow Reputation">
-                                {post.user.reputationScore || 0}
-                            </span>
+
                         </p>
                         <p className="text-slate-500 text-xs flex items-center gap-1">
                             {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
@@ -54,32 +63,43 @@ const PostCard = ({ post, refreshPosts }) => {
             <p className="text-slate-200 mb-4 whitespace-pre-wrap text-[15px] leading-relaxed font-light pl-13">
                 {post.content}
             </p>
-
-            <div className="flex gap-6 border-t border-slate-800/50 pt-3 text-slate-500 text-sm">
+            {/* Action Buttons - Instagram Style (Icons Only) */}
+            <div className="mt-4 pt-3 border-t border-slate-800/50 flex items-center gap-6">
                 <button
                     onClick={handleLike}
-                    className={`flex items-center gap-1.5 hover:text-red-500 transition-all active:scale-95 ${liked ? 'text-red-500' : ''}`}
+                    className={`flex items-center gap-2 group transition-colors ${isLiked ? 'text-pink-500' : 'text-slate-400 hover:text-pink-500'
+                        }`}
+                    title="Like"
                 >
-                    <HiHeart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
-                    <span>Like</span>
+                    <div className={`p-2 rounded-full group-hover:bg-pink-500/10 transition-all ${isLiked ? 'bg-pink-500/10' : ''}`}>
+                        {isLiked ? <FaHeart className="w-5 h-5" /> : <FaRegHeart className="w-5 h-5" />}
+                    </div>
+                    {likes.length > 0 && <span className="text-sm font-medium">{likes.length}</span>}
                 </button>
 
                 <Link
                     to={`/posts/${post.id}`}
-                    className="flex items-center gap-1.5 hover:text-blue-400 transition-all active:scale-95"
+                    className="flex items-center gap-2 group text-slate-400 hover:text-blue-400 transition-colors"
+                    title="Comment"
                 >
-                    <HiChatAlt className="w-5 h-5" />
-                    <span>Comment</span>
+                    <div className="p-2 rounded-full group-hover:bg-blue-400/10 transition-all">
+                        <FaRegComment className="w-5 h-5" />
+                    </div>
+                    {comments.length > 0 && <span className="text-sm font-medium">{comments.length}</span>}
                 </Link>
+
                 <button
                     onClick={handleRepost}
-                    className="flex items-center gap-1.5 hover:text-green-500 transition-all active:scale-95"
+                    className="flex items-center gap-2 group text-slate-400 hover:text-green-400 transition-colors"
+                    title="Repost"
                 >
-                    <HiRefresh className="w-5 h-5" />
-                    <span>Repost</span>
+                    <div className="p-2 rounded-full group-hover:bg-green-400/10 transition-all">
+                        <FaRetweet className="w-5 h-5" />
+                    </div>
+                    {reposts.length > 0 && <span className="text-sm font-medium">{reposts.length}</span>}
                 </button>
             </div>
-        </div>
+        </div >
     );
 };
 
