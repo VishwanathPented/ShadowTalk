@@ -74,15 +74,21 @@ public class PostService {
     public void likePost(Long postId, String email) {
         User user = userRepository.findByEmail(email).orElseThrow();
         Post post = postRepository.findById(postId).orElseThrow();
+        User author = post.getUser();
 
         if (postLikeRepository.findByPostAndUser(post, user).isPresent()) {
-            // Unlike if already liked? or just do nothing? Let's toggle.
              postLikeRepository.delete(postLikeRepository.findByPostAndUser(post, user).get());
+             // Decrement reputation
+             author.setReputationScore(author.getReputationScore() - 1);
+             userRepository.save(author);
         } else {
             PostLike like = new PostLike();
             like.setPost(post);
             like.setUser(user);
             postLikeRepository.save(like);
+            // Increment reputation
+            author.setReputationScore(author.getReputationScore() + 1);
+            userRepository.save(author);
         }
     }
 

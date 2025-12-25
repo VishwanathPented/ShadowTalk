@@ -84,15 +84,9 @@ public class GroupService {
     }
 
     public List<SocialGroup> getUserGroups(String email) {
-         // This would require a custom query in Repository, or simple logic here
-         // For simplicity and speed without extra Repo methods:
-         // Ideally: groupMemberRepository.findGroupsByUser(...)
-         return List.of(); // Placeholder, skipping complex logic for brevity unless requested.
-         // Better:
-         // User user = userRepository.findByEmail(email).orElseThrow();
-         // return groupMemberRepository.findAll().stream()
-         //     .filter(m -> m.getUser().getId().equals(user.getId()))
-         //     .map(GroupMember::getGroup)
-         //     .toList();
+        User user = userRepository.findByEmail(email).orElseThrow();
+        return groupMemberRepository.findByUser(user).stream()
+                .map(GroupMember::getGroup)
+                .toList();
     }
 }

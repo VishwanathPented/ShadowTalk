@@ -1,6 +1,6 @@
-# 🚀 Deployment Guide
+# ShadowTalk Deployment Guide
 
-This guide explains how to deploy the Anonymous Social Platform.
+This guide explains how to deploy the ShadowTalk.
 
 ## 1. Backend Deployment (Render / Railway)
 

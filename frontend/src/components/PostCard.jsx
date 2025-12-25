@@ -36,8 +36,11 @@ const PostCard = ({ post, refreshPosts }) => {
                         {post.user.anonymousName.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
-                        <p className="text-white font-semibold text-sm tracking-wide group-hover:text-brand-primary transition-colors">
+                        <p className="text-white font-semibold text-sm tracking-wide group-hover:text-brand-primary transition-colors flex items-center gap-2">
                             {post.user.anonymousName}
+                            <span className="text-[10px] bg-slate-800 text-brand-primary px-1.5 py-0.5 rounded border border-slate-700/50 font-mono" title="Shadow Reputation">
+                                {post.user.reputationScore || 0}
+                            </span>
                         </p>
                         <p className="text-slate-500 text-xs flex items-center gap-1">
                             {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}

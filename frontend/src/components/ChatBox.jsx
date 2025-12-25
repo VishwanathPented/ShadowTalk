@@ -249,7 +249,10 @@ const ChatBox = ({ groupId }) => {
                                         alt="Avatar"
                                         className="w-8 h-8 rounded-full shadow-md"
                                     />
-                                    <div className={`px-4 py-2 rounded-2xl break-words relative ${isMe ? 'bg-brand-primary text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}`}>
+                                    <div className={`px-4 py-2 rounded-2xl break-words relative shadow-lg ${isMe
+                                            ? 'bg-gradient-to-r from-brand-primary to-purple-600 text-white rounded-tr-none'
+                                            : 'bg-slate-800/80 backdrop-blur-sm text-slate-200 rounded-tl-none border border-white/5'
+                                        }`}>
                                         {msg.replyTo && (
                                             <div className={`text-xs mb-2 p-2 rounded border-l-2 ${isMe ? 'bg-white/10 border-white/50' : 'bg-black/20 border-slate-500'}`}>
                                                 <span className="font-bold block opacity-75">{msg.replyTo.user?.anonymousName || 'Unknown'}</span>

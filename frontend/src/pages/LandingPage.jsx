@@ -36,16 +36,11 @@ const LandingPage = () => {
                     The Future of Anonymous Social
                 </div>
 
-                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl">
-                    Speak from the <br className="hidden md:block" />
-                    <span className="bg-gradient-to-r from-brand-primary via-purple-500 to-brand-accent bg-clip-text text-transparent">
-                        Shadows
-                    </span>
+                <h1 className="text-6xl md:text-8xl font-black mb-6 bg-gradient-to-r from-brand-primary via-purple-500 to-brand-accent bg-clip-text text-transparent animate-pulse-slow">
+                    ShadowTalk
                 </h1>
-
-                <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed">
-                    A decentralized, privacy-first platform where your identity remains a mystery.
-                    Share thoughts, join groups, and connect without the mask of society.
+                <p className="text-xl md:text-2xl text-slate-400 mb-8 max-w-2xl mx-auto leading-relaxed">
+                    Speak freely in the shadows. <span className="text-brand-primary font-semibold">One Identity. No Masks. No Traces.</span>
                 </p>
 
                 <div className="flex flex-col md:flex-row gap-4">

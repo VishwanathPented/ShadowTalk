@@ -58,33 +58,10 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
-    const fetchPersonas = async () => {
-        try {
-            const res = await api.get('/api/personas');
-            return res.data;
-        } catch (e) {
-            console.error("Failed to fetch personas", e);
-            return [];
-        }
-    };
 
-    const createPersona = async (name, avatarColor) => {
-        const res = await api.post('/api/personas', { name, avatarColor });
-        return res.data;
-    };
-
-    const switchPersona = async (personaId) => {
-        const res = await api.put(`/api/personas/${personaId}/equip`);
-        // Update local user state with new active persona if needed, or just reload
-        // Ideally we update the user object here.
-        // For now, let's just refetch or rely on next page load.
-        // Better: update user context
-        // setUser(prev => ({ ...prev, ...updatedUserFields }));
-        return res.data;
-    };
 
     return (
-        <AuthContext.Provider value={{ user, login, signup, logout, loading, fetchPersonas, createPersona, switchPersona }}>
+        <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
             {loading ? <div className="text-white text-center mt-20">Initializing Session...</div> : children}
         </AuthContext.Provider>
     );

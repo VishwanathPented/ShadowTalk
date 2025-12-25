@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.anonymous</groupId>
-	<artifactId>social-platform</artifactId>
+	<artifactId>shadow-talk</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>social-platform</name>
-	<description>Anonymous Social Platform Backend</description>
+	<name>shadow-talk</name>
+	<description>ShadowTalk Backend</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>

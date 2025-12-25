@@ -24,13 +24,11 @@ public class User {
     @Column(name = "anonymous_name", unique = true, nullable = false)
     private String anonymousName;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    private java.util.List<Persona> personas = new java.util.ArrayList<>();
+    @Column(name = "reputation_score")
+    private Integer reputationScore = 0;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "active_persona_id")
-    private Persona activePersona;
+    @Column(name = "avatar_color")
+    private String avatarColor;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -38,11 +36,12 @@ public class User {
 
     public User() {}
 
-    public User(Long id, String email, String password, String anonymousName, LocalDateTime createdAt) {
+    public User(Long id, String email, String password, String anonymousName, String avatarColor, LocalDateTime createdAt) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.anonymousName = anonymousName;
+        this.avatarColor = avatarColor;
         this.createdAt = createdAt;
     }
 
@@ -58,11 +57,11 @@ public class User {
     public String getAnonymousName() { return anonymousName; }
     public void setAnonymousName(String anonymousName) { this.anonymousName = anonymousName; }
 
-    public java.util.List<Persona> getPersonas() { return personas; }
-    public void setPersonas(java.util.List<Persona> personas) { this.personas = personas; }
+    public Integer getReputationScore() { return reputationScore != null ? reputationScore : 0; }
+    public void setReputationScore(Integer reputationScore) { this.reputationScore = reputationScore; }
 
-    public Persona getActivePersona() { return activePersona; }
-    public void setActivePersona(Persona activePersona) { this.activePersona = activePersona; }
+    public String getAvatarColor() { return avatarColor; }
+    public void setAvatarColor(String avatarColor) { this.avatarColor = avatarColor; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

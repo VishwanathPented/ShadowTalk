@@ -3,8 +3,6 @@
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/service/CustomUserDetailsService.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/repository/PostLikeRepository.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/model/Post.java
-/Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/controller/PersonaController.java
-/Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/model/Persona.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/utils/JwtUtil.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/model/BannedWord.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/service/PostService.java
@@ -25,7 +23,6 @@
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/service/GroupService.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/repository/BannedWordRepository.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/repository/SocialGroupRepository.java
-/Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/repository/PersonaRepository.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/config/WebSocketAuthInterceptor.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/repository/CommentRepository.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/repository/PostRepository.java
@@ -40,5 +37,4 @@
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/controller/HashtagController.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/model/MessageReaction.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/model/Comment.java
-/Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/service/PersonaService.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/config/SecurityConfig.java
