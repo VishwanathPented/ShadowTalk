@@ -1,31 +1,43 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
-import { HiTrendingUp } from 'react-icons/hi';
+import { HiLightningBolt, HiHeart } from 'react-icons/hi';
+import { Link } from 'react-router-dom';
 
 const TrendingSidebar = () => {
-    const [hashtags, setHashtags] = useState([]);
+    const [topPosts, setTopPosts] = useState([]);
 
     useEffect(() => {
         const fetchTrending = async () => {
             try {
-                const res = await api.get('/api/hashtags/trending');
-                setHashtags(res.data);
+                const res = await api.get('/api/posts/top');
+                setTopPosts(res.data);
             } catch (error) {
-                console.error("Failed to load trending tags", error);
+                console.error("Failed to load trending posts", error);
             }
         };
         fetchTrending();
     }, []);
 
-    if (hashtags.length === 0) return null;
+    if (topPosts.length === 0) return null;
 
     return (
         <div className="space-y-4">
-            {hashtags.map(tag => (
-                <div key={tag.id} className="flex justify-between items-center group cursor-pointer p-2 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
-                    <span className="text-neutral-400 group-hover:text-neon-cyan font-mono transition-colors">#{tag.name}</span>
-                    <span className="text-[10px] text-neutral-600 group-hover:text-neutral-500 font-bold">{tag.usageCount} NODES</span>
-                </div>
+            {topPosts.map((post, index) => (
+                <Link to={`/post/${post.id}`} key={post.id} className="block group cursor-pointer p-3 rounded-xl bg-neutral-900/40 border border-white/5 hover:border-brand-primary/30 hover:bg-white/5 transition-all relative overflow-hidden">
+                    <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                            <span className="text-brand-primary font-bold text-xs truncate max-w-[100px]">{post.user.anonymousName}</span>
+                            {index === 0 && <span className="bg-brand-primary/20 text-brand-primary text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">#1 Hot</span>}
+                        </div>
+                        <div className="flex items-center gap-1 text-neutral-500 text-xs">
+                            <HiHeart className="text-red-500/80" />
+                            <span>{post.likes?.length || 0}</span>
+                        </div>
+                    </div>
+                    <p className="text-neutral-300 text-xs line-clamp-2 font-mono opacity-80 group-hover:opacity-100 transition-opacity">
+                        {post.content}
+                    </p>
+                </Link>
             ))}
         </div>
     );

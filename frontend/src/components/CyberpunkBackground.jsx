@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 
 const CyberpunkBackground = () => {
     return (
-        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none bg-slate-950">
+        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none bg-neutral-950">
             {/* Animated Gradient Orbs */}
             <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-brand-primary/20 rounded-full blur-[120px] animate-blob"></div>
             <div className="absolute top-[30%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] animate-blob animation-delay-2000"></div>

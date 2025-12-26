@@ -77,6 +77,10 @@ public class PostService {
         return posts;
     }
 
+    public List<Post> getTopLikedPosts(int limit) {
+        return postRepository.findTopLikedPosts(org.springframework.data.domain.PageRequest.of(0, limit));
+    }
+
     public void likePost(Long postId, String email) {
         User user = userRepository.findByEmail(email).orElseThrow();
         Post post = postRepository.findById(postId).orElseThrow();

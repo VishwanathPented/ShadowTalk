@@ -57,7 +57,7 @@ const Login = () => {
                 transition={{ duration: 0.5 }}
                 className="w-full max-w-md relative z-10"
             >
-                <div className="glass-panel p-8 rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl bg-slate-900/60">
+                <div className="glass-panel p-8 rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl bg-neutral-900/60">
                     <div className="text-center mb-8">
                         <motion.h2
                             key={isLogin ? 'login' : 'signup'}
@@ -67,7 +67,7 @@ const Login = () => {
                         >
                             {isLogin ? 'Enter the Void' : 'Join the Shadows'}
                         </motion.h2>
-                        <p className="text-slate-400">
+                        <p className="text-neutral-400">
                             {isLogin ? 'Welcome back, anonymous traveler.' : 'Create your secret identity. No masks required.'}
                         </p>
                     </div>
@@ -85,7 +85,7 @@ const Login = () => {
                                     type="text"
                                     value={alias}
                                     onChange={(e) => setAlias(e.target.value)}
-                                    className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all decoration-none"
+                                    className="w-full bg-neutral-950/50 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all decoration-none"
                                     placeholder="Choose your codename..."
                                 />
                             </motion.div>
@@ -97,7 +97,7 @@ const Login = () => {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
+                                className="w-full bg-neutral-950/50 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
                                 placeholder="you@example.com"
                             />
                         </div>
@@ -108,7 +108,7 @@ const Login = () => {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
+                                className="w-full bg-neutral-950/50 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -135,7 +135,7 @@ const Login = () => {
                     <div className="mt-8 text-center">
                         <button
                             onClick={() => setIsLogin(!isLogin)}
-                            className="text-slate-400 hover:text-white text-sm transition-colors group"
+                            className="text-neutral-400 hover:text-white text-sm transition-colors group"
                         >
                             {isLogin ? (
                                 <span>Need a secret identity? <span className="text-brand-primary font-bold group-hover:underline">Sign up</span></span>

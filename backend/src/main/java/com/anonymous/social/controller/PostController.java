@@ -29,6 +29,11 @@ public class PostController {
         return postService.getAllPosts();
     }
 
+    @GetMapping("/top")
+    public List<Post> getTopLikedPosts() {
+        return postService.getTopLikedPosts(5);
+    }
+
     @PostMapping
     public ResponseEntity<?> createPost(@RequestBody Map<String, String> request,
                                         @AuthenticationPrincipal UserDetails userDetails) {

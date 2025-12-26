@@ -4,9 +4,9 @@ import CyberpunkBackground from './CyberpunkBackground';
 
 const Layout = () => {
     return (
-        <div className="min-h-screen text-slate-200 pb-20 md:pb-0 md:pt-0 md:pl-20 selection:bg-neon-cyan selection:text-black font-sans">
+        <div className="min-h-screen text-neutral-200 pb-20 md:pb-0 md:pt-0 md:pl-20 selection:bg-neon-cyan selection:text-black font-sans">
             <Navbar />
-            <main className="container mx-auto px-4 py-8 max-w-4xl">
+            <main className="container mx-auto px-4 py-8 max-w-[1920px]">
                 <Outlet />
             </main>
 

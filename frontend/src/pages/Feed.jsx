@@ -3,7 +3,7 @@ import api from '../api/axios';
 import CreatePost from '../components/CreatePost';
 import PostCard from '../components/PostCard';
 import TrendingSidebar from '../components/TrendingSidebar';
-import { HiFire } from 'react-icons/hi';
+import { HiFire, HiChip, HiLightningBolt } from 'react-icons/hi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Feed = () => {
@@ -37,146 +37,129 @@ const Feed = () => {
     }, []);
 
     return (
-        <div className="pt-[20px] pb-24 md:pt-10 md:pb-10 max-w-[1600px] mx-auto min-h-screen">
+        <div className="min-h-screen text-neutral-200">
+            {/* Top Operational Stats - Decorative */}
+            <div className="flex justify-between items-center mb-8 px-2 border-b border-white/5 pb-4">
+                <div className="flex items-center gap-3">
+                    <span className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse shadow-[0_0_10px_#00e5ff]"></span>
+                    <h1 className="text-sm font-mono tracking-widest text-white">SYSTEM_FEED // LIVE</h1>
+                </div>
+                <div className="flex gap-4 text-[10px] font-mono text-neutral-500">
+                    <span>LATENCY: 12ms</span>
+                    <span>ENCRYPTION: MAX</span>
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                {/* Main Feed Column (Floating Stream) */}
-                <div className="lg:col-span-8 xl:col-span-7 mx-auto w-full max-w-2xl">
+                {/* LEFT: Main Stream (Cols 1-8) */}
+                <div className="lg:col-span-8 flex flex-col gap-8">
 
-                    {/* Header: Greetings */}
-                    <div className="mb-8 px-2">
-                        <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">System Feed <span className="text-neon-cyan">●</span></h1>
-                        <p className="text-neutral-500 text-sm font-mono">ENCRYPTED CONNECTION ESTABLISHED</p>
-                    </div>
-
-                    {/* Stories Rail (Holographic Rings) */}
-                    <div className="flex gap-4 overflow-x-auto pb-6 mb-4 scrollbar-hide px-2">
-                        {/* Add Story */}
-                        <div className="flex flex-col items-center gap-2 shrink-0 cursor-pointer group">
-                            <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center bg-white/5 group-hover:border-neon-cyan group-hover:bg-neon-cyan/10 transition-all duration-300">
-                                <span className="text-2xl text-white group-hover:text-neon-cyan">+</span>
+                    {/* Broadcast Terminal (Create Post) */}
+                    <div className="relative group perspective-1000">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-purple/20 to-neon-cyan/20 opacity-50 group-hover:opacity-75 transition duration-500 blur rounded-xl"></div>
+                        <div className="relative bg-black/80 backdrop-blur-xl rounded-xl p-6 border border-white/10 shadow-2xl transition-all duration-300 group-hover:border-white/20">
+                            <div className="flex items-center gap-3 mb-4">
+                                <HiLightningBolt className="text-neon-cyan" />
+                                <span className="text-xs font-mono text-neutral-400 tracking-wider">NEW_TRANSMISSION</span>
                             </div>
-                        </div>
 
-                        {/* Stories */}
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="flex flex-col items-center gap-2 shrink-0 cursor-pointer group">
-                                <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-neon-purple to-neon-cyan group-hover:shadow-[0_0_15px_rgba(118,58,245,0.5)] transition-all duration-300">
-                                    <div className="bg-black rounded-full w-full h-full p-[2px]">
-                                        <img
-                                            src={`https://ui-avatars.com/api/?name=User+${i}&background=random&color=fff&size=50`}
-                                            className="w-full h-full rounded-full object-cover"
-                                            alt="story"
-                                        />
-                                    </div>
-                                </div>
-                                <span className="text-[10px] text-neutral-400 tracking-wider uppercase opacity-0 group-hover:opacity-100 transition-opacity">
-                                    User_{i + 1}
-                                </span>
-                            </div>
-                        ))}
+                            <CreatePost onPostCreated={fetchPosts} />
+                        </div>
                     </div>
 
-                    {/* Create Post (Glass Bar) */}
-                    <div className="mb-10 glass-panel rounded-xl p-4 flex gap-4 items-center cursor-text hover:bg-white/5 transition-colors border-l-4 border-l-neon-purple shadow-lg">
-                        <div className="w-10 h-10 rounded-full bg-neutral-800 overflow-hidden shrink-0 ring-1 ring-white/10">
-                            <img
-                                src={`https://ui-avatars.com/api/?name=Me&background=random&color=fff&size=50`}
-                                alt="Me"
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Broadcast to the network..."
-                            className="bg-transparent text-white w-full focus:outline-none placeholder-neutral-600 font-mono text-sm"
-                            readOnly
-                            onClick={() => document.getElementById('create-post-modal').showModal()}
-                        />
-                        <div className="flex gap-2 text-neutral-500">
-                            <span className="hover:text-neon-cyan cursor-pointer transition-colors">📷</span>
-                            <span className="hover:text-neon-purple cursor-pointer transition-colors">📎</span>
-                        </div>
-                        <CreatePost onPostCreated={fetchPosts} />
-                    </div>
-
-                    {/* Filter Tabs (Floating Glass) */}
-                    <div className="flex gap-4 mb-8 sticky top-4 z-40">
+                    {/* Signal Tuners (Filters) */}
+                    <div className="flex gap-8 border-b border-white/5 pb-1 ml-2">
                         <button
                             onClick={() => setFilter('latest')}
-                            className={`px-6 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all backdrop-blur-md ${filter === 'latest' ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50 shadow-[0_0_15px_rgba(0,229,255,0.2)]' : 'bg-black/40 text-neutral-500 border border-white/5 hover:border-white/20'}`}
+                            className={`pb-3 text-xs font-bold tracking-[0.2em] uppercase transition-all relative ${filter === 'latest' ? 'text-neon-cyan text-shadow-neon' : 'text-neutral-500 hover:text-white'
+                                }`}
                         >
                             Live Feed
+                            {filter === 'latest' && (
+                                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-[1px] bg-neon-cyan shadow-[0_0_10px_#00e5ff]" />
+                            )}
                         </button>
                         <button
                             onClick={() => setFilter('top')}
-                            className={`px-6 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all backdrop-blur-md ${filter === 'top' ? 'bg-neon-purple/20 text-neon-purple border border-neon-purple/50 shadow-[0_0_15px_rgba(118,58,245,0.2)]' : 'bg-black/40 text-neutral-500 border border-white/5 hover:border-white/20'}`}
+                            className={`pb-3 text-xs font-bold tracking-[0.2em] uppercase transition-all relative ${filter === 'top' ? 'text-neon-purple text-shadow-neon' : 'text-neutral-500 hover:text-white'
+                                }`}
                         >
-                            Trending
+                            High Voltage
+                            {filter === 'top' && (
+                                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-[1px] bg-neon-purple shadow-[0_0_10px_#763af5]" />
+                            )}
                         </button>
                     </div>
 
-                    {/* Feed Content */}
+                    {/* Feed Output */}
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-20 gap-4">
-                            <div className="w-12 h-12 border-2 border-white/10 border-t-neon-cyan rounded-full animate-spin"></div>
-                            <p className="text-xs text-neutral-500 font-mono animate-pulse">DECRYPTING DATA...</p>
+                        <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-50">
+                            <HiChip className="text-4xl text-neon-cyan animate-spin" />
+                            <p className="text-xs text-neon-cyan font-mono animate-pulse">DECODING STREAM...</p>
                         </div>
                     ) : (
-                        <div className="space-y-6 pb-20">
+                        <div className="space-y-6">
                             <AnimatePresence>
                                 {getSortedPosts().map((post, index) => (
                                     <motion.div
                                         key={post.id}
-                                        initial={{ opacity: 0, y: 50 }}
+                                        initial={{ opacity: 0, y: 30 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.6, delay: index * 0.1, type: "spring", bounce: 0.4 }}
+                                        transition={{ duration: 0.4, delay: index * 0.05 }}
                                     >
-                                        <div className="glass-panel rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,0,0,0.5)] bg-black/40 backdrop-blur-xl">
+                                        <div className="glass-panel rounded-xl overflow-hidden hover:border-white/20 transition-all duration-300 bg-black/20 backdrop-blur-sm border border-white/5 hover:shadow-[0_0_20px_rgba(0,0,0,0.5)]">
                                             <PostCard post={post} refreshPosts={fetchPosts} />
                                         </div>
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
                             {posts.length === 0 && (
-                                <div className="text-center py-20 text-neutral-500 font-mono text-xs">
-                                    [NO SIGNALS DETECTED]
+                                <div className="text-center py-20 text-neutral-600 font-mono text-xs border border-dashed border-white/10 rounded-xl">
+                                    [NO SIGNALS DETECTED IN SECTOR]
                                 </div>
                             )}
                         </div>
                     )}
                 </div>
 
-                {/* Right Column (Widget Stack) */}
-                <div className="hidden lg:flex lg:col-span-4 xl:col-span-5 flex-col gap-6 pt-10 pr-10">
-                    <div className="sticky top-10 space-y-6">
+                {/* RIGHT: Intelligence Panel (Cols 9-12) */}
+                <div className="lg:col-span-4 space-y-6">
 
-                        {/* Search Widget */}
-                        <div className="glass-panel rounded-full px-5 py-3 flex items-center gap-3 bg-black/40 hover:bg-black/60 transition-colors group border border-white/10 focus-within:border-neon-cyan/50">
-                            <span className="text-neutral-500 group-focus-within:text-neon-cyan transition-colors">🔍</span>
-                            <input
-                                type="text"
-                                placeholder="Search the network..."
-                                className="bg-transparent text-white text-sm focus:outline-none w-full placeholder-neutral-600"
-                            />
+                    {/* Trending Module (Moved Up) */}
+                    <div className="bg-black/40 backdrop-blur-3xl rounded-2xl p-6 border border-white/5 relative overflow-hidden group hover:border-white/10 transition-colors">
+                        {/* Decorative Background Blob */}
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-neon-purple/10 blur-[60px] rounded-full pointer-events-none group-hover:bg-neon-purple/20 transition-all"></div>
+
+                        <div className="flex items-center gap-2 mb-6 relative z-10">
+                            <HiFire className="text-neon-purple" />
+                            <h3 className="text-xs font-bold text-white uppercase tracking-widest">Trending Vectors</h3>
                         </div>
 
-                        {/* Trending Sidebar */}
-                        <div className="glass-panel rounded-3xl p-6 bg-black/40 backdrop-blur-xl border border-white/5 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-neon-purple/10 blur-[50px] rounded-full pointer-events-none"></div>
-                            <h3 className="text-sm font-bold text-white mb-6 flex items-center gap-2 uppercase tracking-widest">
-                                <HiFire className="text-neon-purple" /> Trending Nodes
-                            </h3>
-                            <TrendingSidebar />
-                        </div>
-
-                        {/* Footer */}
-                        <div className="text-[10px] text-neutral-600 px-4 font-mono">
-                            <p>SHADOW_TALK_OS v5.0.1 // SECURE</p>
-                            <p className="mt-2 text-neutral-700">© 2024</p>
-                        </div>
-
+                        <TrendingSidebar />
                     </div>
+
+                    {/* System Info / Footer */}
+                    <div className="p-6 rounded-2xl border border-dashed border-white/5 text-[10px] text-neutral-600 font-mono space-y-3">
+                        <div className="flex justify-between items-center">
+                            <span>NETWORK_STATUS</span>
+                            <span className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                OPTIMAL
+                            </span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span>UPTIME</span>
+                            <span>99.9%</span>
+                        </div>
+                        <div className="h-[1px] bg-white/5 my-2"></div>
+                        <div className="flex justify-between opacity-50">
+                            <span>PROTOCOL</span>
+                            <span>SHADOW_TALK_V1</span>
+                        </div>
+                        <p className="pt-2 text-center opacity-30">© 2024 DECENTRALIZED DATA</p>
+                    </div>
+
                 </div>
 
             </div>

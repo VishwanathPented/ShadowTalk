@@ -20,11 +20,11 @@ const ProfilePage = () => {
             setLoading(true);
             try {
                 // Fetch Profile Info
-                const profileRes = await api.get(`/api/users/${username}`);
+                const profileRes = await api.get(`/api/users/${encodeURIComponent(username)}`);
                 setProfile(profileRes.data);
 
                 // Fetch User Posts
-                const postsRes = await api.get(`/api/users/${username}/posts`);
+                const postsRes = await api.get(`/api/users/${encodeURIComponent(username)}/posts`);
                 setPosts(postsRes.data);
             } catch (error) {
                 console.error("Failed to load profile", error);
@@ -127,13 +127,13 @@ const ProfilePage = () => {
                             </div>
                         </div>
 
-                        {currentUser && currentUser.email !== profile.email && ( // Assuming email check works or compare IDs
+                        {currentUser && currentUser.anonymousName !== profile.anonymousName && (
                             <button
                                 onClick={handleFollow}
                                 disabled={followLoading}
                                 className={`px-8 py-2 rounded-full font-bold text-sm tracking-wide transition-all ${profile.isFollowing
-                                        ? 'bg-transparent border border-white/20 text-white hover:border-red-500 hover:text-red-500'
-                                        : 'bg-neon-purple text-white hover:bg-neon-purple/80 shadow-[0_0_15px_rgba(118,58,245,0.4)]'
+                                    ? 'bg-transparent border border-white/20 text-white hover:border-red-500 hover:text-red-500'
+                                    : 'bg-neon-purple text-white hover:bg-neon-purple/80 shadow-[0_0_15px_rgba(118,58,245,0.4)]'
                                     }`}
                             >
                                 {followLoading ? 'PROCESSING...' : profile.isFollowing ? 'UNFOLLOW' : 'FOLLOW'}

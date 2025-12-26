@@ -59,7 +59,7 @@ const PostDetail = () => {
 
     return (
         <div className="max-w-2xl mx-auto">
-            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-400 hover:text-white mb-4 transition-colors">
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-neutral-400 hover:text-white mb-4 transition-colors">
                 <HiArrowLeft /> Back
             </button>
 
@@ -74,7 +74,7 @@ const PostDetail = () => {
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                         placeholder="Add a comment..."
-                        className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-brand-primary outline-none"
+                        className="flex-1 bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-2 text-white focus:border-brand-primary outline-none"
                     />
                     <button type="submit" disabled={!comment.trim()} className="bg-brand-primary p-2 rounded-lg text-white disabled:opacity-50 hover:bg-brand-accent">
                         <HiPaperAirplane className="w-5 h-5 rotate-90" />
@@ -84,18 +84,18 @@ const PostDetail = () => {
                 <div className="space-y-4">
                     {post.comments && post.comments.length > 0 ? (
                         post.comments.map(c => (
-                            <div key={c.id} className="bg-slate-900/50 p-4 rounded-xl border border-slate-800/50">
+                            <div key={c.id} className="bg-neutral-900/50 p-4 rounded-xl border border-neutral-800/50">
                                 <div className="flex justify-between items-start mb-1">
                                     <span className="font-bold text-brand-primary text-sm">{c.user.anonymousName}</span>
-                                    <span className="text-xs text-slate-500">
+                                    <span className="text-xs text-neutral-500">
                                         {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
                                     </span>
                                 </div>
-                                <p className="text-slate-300">{c.content}</p>
+                                <p className="text-neutral-300">{c.content}</p>
                             </div>
                         ))
                     ) : (
-                        <p className="text-slate-500 text-center italic">No comments yet. Be the first!</p>
+                        <p className="text-neutral-500 text-center italic">No comments yet. Be the first!</p>
                     )}
                 </div>
             </div>

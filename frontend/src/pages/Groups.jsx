@@ -67,20 +67,20 @@ const Groups = () => {
                 {showCreate && (
                     <form onSubmit={handleCreate} className="glass-panel p-6 rounded-xl mb-6">
                         <input
-                            className="w-full bg-slate-950/50 border border-slate-700/50 rounded p-2 text-white mb-2 focus:border-brand-primary"
+                            className="w-full bg-neutral-950/50 border border-neutral-700/50 rounded p-2 text-white mb-2 focus:border-brand-primary"
                             placeholder="Group Name"
                             value={newGroup.name}
                             onChange={e => setNewGroup({ ...newGroup, name: e.target.value })}
                             required
                         />
                         <input
-                            className="w-full bg-slate-950/50 border border-slate-700/50 rounded p-2 text-white mb-2 focus:border-brand-primary"
+                            className="w-full bg-neutral-950/50 border border-neutral-700/50 rounded p-2 text-white mb-2 focus:border-brand-primary"
                             placeholder="Description"
                             value={newGroup.description}
                             onChange={e => setNewGroup({ ...newGroup, description: e.target.value })}
                         />
                         <div className="flex items-center gap-2 mb-4">
-                            <label className="text-slate-400">Private?</label>
+                            <label className="text-neutral-400">Private?</label>
                             <input type="checkbox" checked={newGroup.isPrivate} onChange={e => setNewGroup({ ...newGroup, isPrivate: e.target.checked })} />
                         </div>
                         <button type="submit" className="bg-brand-primary hover:bg-brand-accent transition-colors px-4 py-2 rounded text-white text-sm">Create Group</button>
@@ -97,12 +97,12 @@ const Groups = () => {
                                             {group.name}
                                             {group.isPrivate ? <HiLockClosed className="w-4 h-4 text-red-400" /> : <HiGlobeAlt className="w-4 h-4 text-green-400" />}
                                         </h3>
-                                        <p className="text-slate-400 text-sm mt-1">{group.description}</p>
+                                        <p className="text-neutral-400 text-sm mt-1">{group.description}</p>
                                     </div>
                                     <Link
                                         to={`/groups/${group.id}`}
                                         onClick={() => handleJoin(group.id)}
-                                        className="bg-slate-800 hover:bg-brand-primary text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                                        className="bg-neutral-800 hover:bg-brand-primary text-white px-3 py-1 rounded-lg text-sm transition-colors"
                                     >
                                         Open
                                     </Link>
@@ -110,7 +110,7 @@ const Groups = () => {
                             </div>
                         ))
                     ) : (
-                        <div className="text-slate-500 text-center py-10">
+                        <div className="text-neutral-500 text-center py-10">
                             No groups found. Create one!
                             <br />
                             <span className="text-xs text-red-500">

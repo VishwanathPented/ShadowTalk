@@ -8,11 +8,10 @@ export default {
         extend: {
             colors: {
                 'brand-dark': '#000000', // True Black
-                'brand-primary': '#0095f6', // Social Blue
+                'brand-primary': '#00E5FF', // Neon Cyan
                 'brand-accent': '#262626',  // Neutral Zinc
                 'brand-surface': '#121212', // Zinc 900
-                'social-blue': '#0095f6',
-                'neon-purple': '#D300C5',
+                'neon-purple': '#763AF5',   // Unified Purple
                 'neon-cyan': '#00E5FF',
             },
             backgroundImage: {

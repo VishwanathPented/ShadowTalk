@@ -48,7 +48,7 @@ const PostCard = ({ post, refreshPosts }) => {
             {/* Header */}
             <div className="flex items-center justify-between px-4 mb-4 relative z-10">
                 <div className="flex items-center gap-3">
-                    <Link to={`/profile/${post.user.anonymousName}`}>
+                    <Link to={`/profile/${encodeURIComponent(post.user.anonymousName)}`}>
                         <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-neon-purple to-neon-cyan cursor-pointer hover:shadow-[0_0_15px_rgba(0,229,255,0.5)] transition-all">
                             <div className="w-full h-full bg-black rounded-full p-[2px] overflow-hidden">
                                 <img
@@ -60,7 +60,7 @@ const PostCard = ({ post, refreshPosts }) => {
                         </div>
                     </Link>
                     <div className="flex flex-col">
-                        <Link to={`/profile/${post.user.anonymousName}`}>
+                        <Link to={`/profile/${encodeURIComponent(post.user.anonymousName)}`}>
                             <span className="text-sm font-bold text-white leading-none tracking-wide hover:text-neon-cyan cursor-pointer transition-colors">
                                 {post.user.anonymousName}
                             </span>

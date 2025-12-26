@@ -34,7 +34,6 @@ const Navbar = () => {
                 <div className="flex flex-col gap-6 w-full items-center">
                     <NavItem to="/feed" icon={HiHome} label="Home" active={location.pathname === '/feed'} />
                     <NavItem to="/search" icon={HiSearch} label="Search" active={location.pathname === '/search'} />
-                    <NavItem to="/messages" icon={HiChatAlt2} label="Messages" active={location.pathname === '/messages'} />
                     <NavItem to="/groups" icon={HiUserGroup} label="Groups" active={location.pathname === '/groups'} />
                     <NavItem to="/notifications" icon={HiBell} label="Alerts" active={location.pathname === '/notifications'} />
                 </div>
