@@ -68,8 +68,8 @@ const Feed = () => {
                         </div>
                     </div>
 
-                    {/* Signal Tuners (Filters) */}
-                    <div className="flex gap-8 border-b border-white/5 pb-1 ml-2">
+                    {/* Signal Tuners (Filters) - Sticky Glass Bar */}
+                    <div className="sticky top-[72px] z-30 backdrop-blur-xl bg-black/60 border-b border-white/10 flex gap-8 pb-0 pt-4 px-4 -mx-4 rounded-b-xl transition-all duration-300">
                         <button
                             onClick={() => setFilter('latest')}
                             className={`pb-3 text-xs font-bold tracking-[0.2em] uppercase transition-all relative ${filter === 'latest' ? 'text-neon-cyan text-shadow-neon' : 'text-neutral-500 hover:text-white'
@@ -77,7 +77,7 @@ const Feed = () => {
                         >
                             Live Feed
                             {filter === 'latest' && (
-                                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-[1px] bg-neon-cyan shadow-[0_0_10px_#00e5ff]" />
+                                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-neon-cyan shadow-[0_0_15px_#00e5ff]" />
                             )}
                         </button>
                         <button
@@ -87,7 +87,7 @@ const Feed = () => {
                         >
                             High Voltage
                             {filter === 'top' && (
-                                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-[1px] bg-neon-purple shadow-[0_0_10px_#763af5]" />
+                                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-neon-purple shadow-[0_0_15px_#763af5]" />
                             )}
                         </button>
                     </div>

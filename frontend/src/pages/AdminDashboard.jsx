@@ -12,9 +12,18 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'react-hot-toast';
 
+import { useSearchParams } from 'react-router-dom';
+
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
-    const [activeTab, setActiveTab] = useState('overview');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'overview';
+
+    // Changing how setActiveTab works by creating a helper instead of state setter
+    const setActiveTab = (tab) => {
+        setSearchParams({ tab });
+    };
+
     const [stats, setStats] = useState({ totalUsers: 0, totalGroups: 0, totalPosts: 0 });
     const [users, setUsers] = useState([]);
     const [groups, setGroups] = useState([]);
