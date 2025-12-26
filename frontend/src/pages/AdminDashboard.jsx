@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+
 import Navbar from '../components/Navbar';
 import api from '../api/axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +10,7 @@ import {
     HiFire, HiLightningBolt
 } from 'react-icons/hi';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { toast } from 'react-hot-toast';
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
@@ -19,126 +21,115 @@ const AdminDashboard = () => {
     const [messages, setMessages] = useState([]);
     const [bannedWords, setBannedWords] = useState([]);
     const [newBannedWord, setNewBannedWord] = useState("");
+    const [newBannedDuration, setNewBannedDuration] = useState(5);
     const [broadcastMsg, setBroadcastMsg] = useState("");
     const [systemHealth, setSystemHealth] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
     const [userMessages, setUserMessages] = useState([]);
+    const [injectMsg, setInjectMsg] = useState("");
 
     const [loading, setLoading] = useState(false);
 
-    const fetchData = async () => {
-        setLoading(true);
-        console.log("Fetching Admin Data... ActiveTab:", activeTab);
-        try {
-            const statsRes = await api.get('/api/shadow/stats');
-            console.log("Stats Response:", statsRes.data);
-            setStats(statsRes.data);
+    const trafficData = [
+        { time: '00:00', messages: 12 }, { time: '04:00', messages: 18 },
+        { time: '08:00', messages: 45 }, { time: '12:00', messages: 92 },
+        { time: '16:00', messages: 78 }, { time: '20:00', messages: 34 },
+        { time: '23:59', messages: 22 },
+    ];
 
-            if (activeTab === 'users') {
-                const res = await api.get('/api/shadow/users');
-                console.log("Users Response:", res.data);
-                setUsers(res.data);
-            }
-            if (activeTab === 'groups') {
-                const res = await api.get('/api/shadow/groups');
-                console.log("Groups Response:", res.data);
-                setGroups(res.data);
-            }
-            if (activeTab === 'messages') {
-                const res = await api.get('/api/shadow/messages');
-                console.log("Messages Data Fetched:", res.data); // DEBUG LOG
-                if (Array.isArray(res.data)) {
-                    setMessages(res.data);
-                } else {
-                    console.error("Messages data is not an array:", res.data);
-                    setMessages([]);
-                }
-            }
-            if (activeTab === 'banned_words') {
-                const res = await api.get('/api/shadow/banned-words');
-                setBannedWords(res.data);
-            }
-            if (activeTab === 'system_core') {
-                const res = await api.get('/api/shadow/system-health');
-                setSystemHealth(res.data);
-            }
+    const fetchData = async () => {
+        try {
+            const [statsRes, usersRes, groupsRes, msgsRes, bannedRes, healthRes, reportsRes] = await Promise.all([
+                api.get('/api/shadow/stats'),
+                api.get('/api/shadow/users'),
+                api.get('/api/shadow/groups'),
+                api.get('/api/shadow/messages'),
+                api.get('/api/shadow/banned-words'),
+                api.get('/api/shadow/system-health'),
+                api.get('/api/shadow/reports')
+            ]);
+            setStats(statsRes.data);
+            setUsers(usersRes.data);
+            setGroups(groupsRes.data);
+            setMessages(msgsRes.data);
+            setBannedWords(bannedRes.data);
+            setSystemHealth(healthRes.data);
+            setReports(reportsRes.data);
         } catch (err) {
-            console.error("Dashboard Fetch Error detailed:", err.response || err);
-            // toast.error("Failed to sync system data");
-        } finally {
-            setLoading(false);
+            console.error("Dashboard sync failed", err);
+            // toast.error("Sync Failed"); // Optional: clean up logs
         }
     };
 
     useEffect(() => {
-        if (user?.role === 'ADMIN') {
-            fetchData();
-            const interval = setInterval(fetchData, 30000);
-            return () => clearInterval(interval);
-        }
-    }, [user, activeTab]);
+        fetchData();
+        const interval = setInterval(fetchData, 30000); // Auto-refresh every 30s
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleDeleteGroup = async (id) => {
+        if (!confirm("Purge this network cell?")) return;
+        try {
+            await api.delete(`/api/shadow/groups/${id}`);
+            setGroups(groups.filter(g => g.id !== id));
+        } catch (err) { alert("Purge failed"); }
+    };
+    const handleManualRefresh = () => {
+        setLoading(true);
+        fetchData();
+        setTimeout(() => setLoading(false), 1000);
+    };
 
     const handleBroadcast = async () => {
         if (!broadcastMsg.trim()) return;
         try {
-            await api.post('/api/shadow/broadcast', { message: broadcastMsg });
-            alert("Broadcast Sent Successfully!");
+            await api.post('/api/shadow/feed/post', { content: `[SYSTEM BROADCAST] ${broadcastMsg}` });
+            toast.success("Broadcast Sent");
             setBroadcastMsg("");
-        } catch (err) {
-            alert("Failed to send broadcast");
-        }
+        } catch (err) { alert("Broadcast Failed"); }
     };
 
-    const handleManualRefresh = () => {
-        fetchData();
-        // toast.success("System Data Synced");
+    const handleDeleteUser = async (id) => {
+        if (!confirm("Terminate this user access?")) return;
+        try {
+            await api.delete(`/api/shadow/users/${id}`);
+            setUsers(users.filter(u => u.id !== id));
+        } catch (err) { alert("Termination failed"); }
     };
 
     const inspectUser = async (user) => {
         setSelectedUser(user);
-        setUserMessages([]); // Clear previous
         try {
-            const res = await api.get(`/api/shadow/users/${user.id}/messages`);
+            const res = await api.get(`/api/shadow/messages/user/${user.id}`);
             setUserMessages(res.data);
-        } catch (err) {
-            console.error("Failed to fetch user messages", err);
-        }
+        } catch (err) { setUserMessages([]); }
     };
-
-    const handleDeleteUser = async (id) => {
-        if (!confirm("Destroy this user?")) return;
+    const handleDeleteMessage = async (id, type) => {
+        if (!confirm("Delete this message?")) return;
         try {
-            await api.delete(`/api/shadow/users/${id}`);
-            setUsers(users.filter(u => u.id !== id));
-        } catch (err) { alert("Failed to delete"); }
-    };
-
-    const handleDeleteGroup = async (id) => {
-        if (!confirm("Destroy this group?")) return;
-        try {
-            await api.delete(`/api/shadow/groups/${id}`);
-            setGroups(groups.filter(g => g.id !== id));
+            await api.delete(`/api/shadow/messages/${id}?type=${type || 'CHAT'}`);
+            setMessages(messages.filter(m => !(m.id === id && m.type === type)));
         } catch (err) {
             const errorMsg = err.response?.data ? (typeof err.response.data === 'object' ? JSON.stringify(err.response.data) : err.response.data) : err.message;
             alert("Failed to delete: " + errorMsg);
         }
     };
 
-    const handleDeleteMessage = async (id, type) => {
-        if (!confirm("Delete this message?")) return;
-        try {
-            await api.delete(`/api/shadow/messages/${id}?type=${type || 'CHAT'}`);
-            setMessages(messages.filter(m => !(m.id === id && m.type === type)));
-        } catch (err) { alert("Failed to delete"); }
-    };
-
-    const handleAddBannedWord = async () => {
+    const handleAddBannedWord = async (e) => {
+        e.preventDefault();
         if (!newBannedWord.trim()) return;
+        console.log("Adding Banned Word:", newBannedWord, "Duration:", newBannedDuration);
         try {
-            await api.post('/api/shadow/banned-words', { word: newBannedWord });
-            setNewBannedWord("");
+            await api.post('/api/shadow/banned-words', {
+                word: newBannedWord,
+                duration: newBannedDuration || 5
+            });
+            setNewBannedWord('');
+            setNewBannedDuration(5);
             fetchData();
-        } catch (err) { alert("Failed to add word"); }
+        } catch (error) {
+            alert(error.response?.data || 'Failed to add word');
+        }
     };
 
     const handleDeleteBannedWord = async (id) => {
@@ -146,6 +137,30 @@ const AdminDashboard = () => {
             await api.delete(`/api/shadow/banned-words/${id}`);
             setBannedWords(bannedWords.filter(w => w.id !== id));
         } catch (err) { alert("Failed to delete"); }
+    };
+
+    const [reports, setReports] = useState([]);
+
+    const handleDeleteReport = async (id) => {
+        try {
+            await api.delete(`/api/shadow/reports/${id}`);
+            setReports(reports.filter(r => r.id !== id));
+            toast.success("Report dismissed");
+        } catch (err) { alert("Failed to dismiss report"); }
+    };
+
+    // Add edit stats handler
+    const handleEditLikes = async (postId, currentLikes) => {
+        const newLikes = prompt(`Enter new like count (Current: ${currentLikes || 0}):`, currentLikes || 0);
+        if (newLikes !== null && !isNaN(newLikes)) {
+            try {
+                await api.put(`/api/shadow/posts/${postId}/stats`, { likes: parseInt(newLikes) });
+                toast.success("Likes updated. It may take a moment to reflect.");
+                if (activeTab === 'messages') fetchData(); // Refresh list to see if possible (though unified list might not show likes directly without updates)
+            } catch (e) {
+                alert("Failed to update stats");
+            }
+        }
     };
 
     if (!user || user.role !== 'ADMIN') {
@@ -188,6 +203,7 @@ const AdminDashboard = () => {
                 <nav className="flex-1 flex flex-col py-4">
                     <SidebarItem id="overview" icon={HiChartBar} label="Dashboard" />
                     <div className="my-2 border-t border-white/5 mx-6"></div>
+                    <SidebarItem id="reports" icon={HiShieldCheck} label="Reports" />
                     <SidebarItem id="users" icon={HiUser} label="Operatives" />
                     <SidebarItem id="groups" icon={HiUserGroup} label="Networks" />
                     <SidebarItem id="messages" icon={HiTerminal} label="Intercepts" />
@@ -237,7 +253,7 @@ const AdminDashboard = () => {
                     {/* Content Views */}
                     {loading && (
                         <div className="p-8 text-center text-indigo-400 font-mono animate-pulse">
-                                    >>> ESTABLISHING UPLINK...
+                            {`>>>`} ESTABLISHING UPLINK...
                         </div>
                     )}
 
@@ -480,37 +496,80 @@ const AdminDashboard = () => {
 
                                     <div className="flex-1">
                                         <div className="text-neutral-300">{m.message}</div>
-                                        <div className="text-[10px] text-neutral-500 mt-1">{m.source}</div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <div className="text-[10px] text-neutral-500">{m.source}</div>
+                                            {m.type === 'POST' && m.likes !== undefined && (
+                                                <span className="text-[10px] text-neon-purple font-mono bg-neon-purple/10 px-1 rounded border border-neon-purple/20">
+                                                    ♥ {m.likes}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <button onClick={() => handleDeleteMessage(m.id, m.type)} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity px-4">
                                         DELETE
                                     </button>
+
+                                    {m.type === 'POST' && (
+                                        <button
+                                            onClick={() => handleEditLikes(m.id)}
+                                            className="text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity px-2 text-xs font-bold border border-indigo-500/30 rounded"
+                                            title="Edit Stats"
+                                        >
+                                            EDIT STATS
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                         </div>
                     )}
 
                     {!loading && activeTab === 'banned' && (
-                        <div className="space-y-8">
-                            <div className="bg-neutral-900/50 p-6 rounded-2xl border border-white/10 flex gap-4">
+                        <div className="bg-neutral-900/50 p-8 rounded-3xl border border-white/10 backdrop-blur-sm">
+                            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                                <HiShieldCheck className="text-red-500" /> Protocol Violations
+                            </h2>
+
+                            <form onSubmit={handleAddBannedWord} className="mb-8 flex gap-4">
                                 <input
                                     type="text"
                                     value={newBannedWord}
                                     onChange={(e) => setNewBannedWord(e.target.value)}
-                                    placeholder="Enter new forbidden pattern..."
-                                    className="flex-1 bg-black/50 border border-white/10 rounded-xl px-6 py-3 text-white focus:outline-none focus:border-red-500 transition-colors font-mono"
-                                    onKeyPress={(e) => e.key === 'Enter' && handleAddBannedWord()}
+                                    placeholder="Enter forbidden sequence..."
+                                    className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500/50 font-mono text-sm"
                                 />
-                                <button onClick={handleAddBannedWord} className="bg-red-600 hover:bg-red-700 text-white px-8 rounded-xl font-bold transition-colors">
-                                    BLACKLIST
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={newBannedDuration}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setNewBannedDuration(val === '' ? '' : parseInt(val));
+                                    }}
+                                    placeholder="Min"
+                                    className="w-24 bg-black/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500/50 font-mono text-sm"
+                                    title="Ban Duration (minutes)"
+                                />
+                                <button type="submit" className="px-6 py-3 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all font-mono text-sm uppercase tracking-wider border border-red-500/20">
+                                    Blacklist
                                 </button>
-                            </div>
-                            <div className="flex flex-wrap gap-3">
-                                {bannedWords.map(w => (
-                                    <div key={w.id} className="bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-lg flex items-center gap-3 group hover:border-red-500/50 transition-all">
-                                        <span className="text-red-400 font-mono">{w.word}</span>
-                                        <button onClick={() => handleDeleteBannedWord(w.id)} className="text-red-400/50 hover:text-red-400">×</button>
+                            </form>
+
+                            <div className="space-y-2">
+                                {bannedWords?.map(word => (
+                                    <div key={word.id} className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5 group hover:border-red-500/30 transition-all">
+                                        <div className="font-mono text-neutral-300">
+                                            {word.word}
+                                            <span className="ml-3 text-xs text-neutral-500 bg-neutral-900 px-2 py-1 rounded">
+                                                {word.banDurationMinutes || 5}m
+                                            </span>
+                                        </div>
+                                        <button
+                                            onClick={() => handleDeleteBannedWord(word.id)}
+                                            className="text-neutral-600 hover:text-red-500 transition-colors"
+                                        >
+                                            <HiTrash />
+                                        </button>
                                     </div>
                                 ))}
                             </div>
@@ -543,6 +602,54 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
                             <p className="text-center text-neutral-500 mt-4 text-xs">WARNING: This message will be pushed to all active connected clients instantly.</p>
+                        </div>
+                    )}
+
+                    {!loading && activeTab === 'reports' && (
+                        <div className="space-y-4">
+                            {reports.length === 0 ? (
+                                <div className="p-12 text-center text-neutral-500 font-mono">NO ACTIVE REPORTS</div>
+                            ) : (
+                                reports.map(report => (
+                                    <div key={report.id} className="bg-neutral-900/50 p-6 rounded-2xl border border-white/10 flex justify-between items-start">
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <span className="text-red-400 font-bold uppercase tracking-wider text-xs border border-red-500/30 px-2 py-0.5 rounded">
+                                                    {report.type}
+                                                </span>
+                                                <span className="text-neutral-500 text-xs">
+                                                    {new Date(report.createdAt).toLocaleString()}
+                                                </span>
+                                            </div>
+                                            <p className="text-white font-bold mb-1">Reason: <span className="text-red-300 font-normal">{report.reason}</span></p>
+                                            <p className="text-neutral-400 text-sm italic">
+                                                Reporter: {report.reporter?.anonymousName || 'Unknown'} (ID: {report.reporter?.id})
+                                            </p>
+                                            {report.reportedPost && (
+                                                <div className="mt-4 p-4 bg-black/30 rounded-xl border border-white/5 text-sm text-neutral-300">
+                                                    "{report.reportedPost.content}"
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <button
+                                                onClick={() => handleDeleteReport(report.id)}
+                                                className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-xs font-bold transition-colors"
+                                            >
+                                                DISMISS REPORT
+                                            </button>
+                                            {report.reportedPost && (
+                                                <button
+                                                    onClick={() => handleDeleteMessage(report.reportedPost.id, 'POST')}
+                                                    className="px-4 py-2 bg-red-900/20 hover:bg-red-600 text-red-500 hover:text-white rounded-lg text-xs font-bold transition-colors"
+                                                >
+                                                    DELETE CONTENT
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     )}
 
@@ -589,9 +696,7 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-            <div className="fixed bottom-6 right-6 z-50">
-                <Navbar />
-            </div>
+
         </div >
     );
 };

@@ -17,7 +17,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     @com.fasterxml.jackson.annotation.JsonIgnore
     private String password;
 
@@ -36,6 +36,9 @@ public class User {
 
     @Column(nullable = false)
     private String role = "USER";
+
+    @Column(name = "banned_until")
+    private LocalDateTime bannedUntil;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -85,6 +88,9 @@ public class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public LocalDateTime getBannedUntil() { return bannedUntil; }
+    public void setBannedUntil(LocalDateTime bannedUntil) { this.bannedUntil = bannedUntil; }
 
     public java.util.Set<User> getFollowing() { return following; }
     public void setFollowing(java.util.Set<User> following) { this.following = following; }

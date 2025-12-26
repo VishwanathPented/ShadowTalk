@@ -85,6 +85,30 @@ public class AuthService {
         return buildAuthResponse(user, token);
     }
 
+    public java.util.Map<String, Object> loginWithGoogle(String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            String finalName = generateUniqueAnonymousName();
+            user = new User();
+            user.setEmail(email);
+            // Password is null for OAuth users
+            user.setAnonymousName(finalName);
+            user = userRepository.save(user);
+        }
+
+        var authorities = java.util.Collections.singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole()));
+        // Pass empty password for UserDetails if actual password is null
+        String pwd = user.getPassword() != null ? user.getPassword() : "";
+        var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), pwd, authorities);
+
+        String token = jwtUtil.generateToken(java.util.Map.of(
+                "anonymousName", user.getAnonymousName(),
+                "role", user.getRole()
+        ), userDetails);
+
+        return buildAuthResponse(user, token);
+    }
+
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));

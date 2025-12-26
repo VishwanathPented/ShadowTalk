@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { HiHome, HiUserGroup, HiLogout, HiSearch, HiChatAlt2, HiBell, HiPlus } from 'react-icons/hi';
+import { HiHome, HiUserGroup, HiLogout, HiSearch, HiChatAlt2, HiBell, HiPlus, HiLightningBolt } from 'react-icons/hi';
 import ProfileModal from './ProfileModal';
 import { motion } from 'framer-motion';
 
@@ -36,6 +36,9 @@ const Navbar = () => {
                     <NavItem to="/search" icon={HiSearch} label="Search" active={location.pathname === '/search'} />
                     <NavItem to="/groups" icon={HiUserGroup} label="Groups" active={location.pathname === '/groups'} />
                     <NavItem to="/notifications" icon={HiBell} label="Alerts" active={location.pathname === '/notifications'} />
+                    {user?.role === 'ADMIN' && (
+                        <NavItem to="/shadow" icon={HiLightningBolt} label="God Mode" active={location.pathname === '/shadow'} />
+                    )}
                 </div>
 
                 {/* Bottom Actions */}
@@ -77,9 +80,15 @@ const Navbar = () => {
                     </div>
                 </button>
 
-                <Link to="/groups" className={`p-2 transition-colors ${location.pathname === '/groups' ? 'text-white' : 'text-neutral-500'}`}>
-                    <HiUserGroup className="w-6 h-6" />
-                </Link>
+                {user?.role === 'ADMIN' ? (
+                    <Link to="/shadow" className={`p-2 transition-colors ${location.pathname === '/shadow' ? 'text-white' : 'text-neutral-500'}`}>
+                        <HiLightningBolt className="w-6 h-6" />
+                    </Link>
+                ) : (
+                    <Link to="/groups" className={`p-2 transition-colors ${location.pathname === '/groups' ? 'text-white' : 'text-neutral-500'}`}>
+                        <HiUserGroup className="w-6 h-6" />
+                    </Link>
+                )}
 
                 <button onClick={() => setShowProfile(true)} className="p-2">
                     <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-white/30">

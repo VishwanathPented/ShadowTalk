@@ -44,6 +44,21 @@ public class AuthController {
         }
     }
 
+    @Autowired
+    private com.anonymous.social.service.GoogleAuthService googleAuthService;
+
+    @PostMapping("/google")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> request) {
+        String token = request.get("token");
+        var payload = googleAuthService.verifyToken(token);
+        if (payload != null) {
+            String email = payload.getEmail();
+            return ResponseEntity.ok(authService.loginWithGoogle(email));
+        } else {
+            return ResponseEntity.status(401).body("Invalid Google Token");
+        }
+    }
+
     @PostMapping("/regenerate-identity")
     public ResponseEntity<?> regenerateIdentity(@RequestHeader("Authorization") String token) {
         try {

@@ -40,6 +40,29 @@ public class GroupChatMessage {
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties("message")
     private java.util.List<MessageReaction> reactions = new java.util.ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    private MessageType type = MessageType.TEXT;
+
+    private LocalDateTime expiresAt;
+
+    private boolean isEdited = false;
+
+    // Poll Fields
+    private String pollQuestion;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "poll_options", joinColumns = @JoinColumn(name = "message_id"))
+    @Column(name = "option_text")
+    private java.util.List<String> pollOptions = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("message")
+    private java.util.List<PollVote> votes = new java.util.ArrayList<>();
+
+    public enum MessageType {
+        TEXT, POLL, IMAGE, SYSTEM
+    }
+
     public GroupChatMessage() {}
 
     public Long getId() { return id; }
@@ -62,4 +85,22 @@ public class GroupChatMessage {
 
     public GroupChatMessage getReplyTo() { return replyTo; }
     public void setReplyTo(GroupChatMessage replyTo) { this.replyTo = replyTo; }
+
+    public MessageType getType() { return type; }
+    public void setType(MessageType type) { this.type = type; }
+
+    public LocalDateTime getExpiresAt() { return expiresAt; }
+    public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
+
+    public boolean isEdited() { return isEdited; }
+    public void setEdited(boolean edited) { isEdited = edited; }
+
+    public String getPollQuestion() { return pollQuestion; }
+    public void setPollQuestion(String pollQuestion) { this.pollQuestion = pollQuestion; }
+
+    public java.util.List<String> getPollOptions() { return pollOptions; }
+    public void setPollOptions(java.util.List<String> pollOptions) { this.pollOptions = pollOptions; }
+
+    public java.util.List<PollVote> getVotes() { return votes; }
+    public void setVotes(java.util.List<PollVote> votes) { this.votes = votes; }
 }

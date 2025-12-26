@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import { FaHeart, FaRegHeart, FaRegComment, FaRetweet, FaShare } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaRegComment, FaRetweet, FaShare, FaFlag } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { toast } from 'react-hot-toast';
@@ -40,6 +40,18 @@ const PostCard = ({ post, refreshPosts }) => {
         }
     };
 
+    const handleReport = async () => {
+        const reason = prompt("Why are you reporting this post? (Spam, Harassment, etc.)");
+        if (reason) {
+            try {
+                await api.post(`/api/posts/${post.id}/report`, { reason });
+                toast.success('Report submitted securely.');
+            } catch (error) {
+                toast.error('Report failed to transmit.');
+            }
+        }
+    };
+
     return (
         <div className="border-b border-white/5 py-4 mb-2 last:border-0 transition-all md:rounded-2xl md:bg-white/5 md:backdrop-blur-md md:border md:border-white/5 hover:border-white/20 hover:shadow-[0_0_30px_rgba(118,58,245,0.1)] group relative overflow-hidden">
             {/* Subtle Gradient Overlay */}
@@ -70,9 +82,17 @@ const PostCard = ({ post, refreshPosts }) => {
                         </span>
                     </div>
                 </div>
-                <button className="text-neutral-500 hover:text-white transition-colors">
-                    <span className="text-xl leading-none mb-2 block">...</span>
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleReport}
+                        className="text-neutral-500 hover:text-red-500 transition-colors title='Report Post'"
+                    >
+                        <FaFlag className="text-sm" />
+                    </button>
+                    <button className="text-neutral-500 hover:text-white transition-colors">
+                        <span className="text-xl leading-none mb-2 block">...</span>
+                    </button>
+                </div>
             </div>
 
             {/* Content */}
@@ -97,7 +117,7 @@ const PostCard = ({ post, refreshPosts }) => {
                                 <FaRegHeart className="text-neutral-400 text-lg group-hover/like:text-neon-purple transition-colors" />
                             )}
                             <span className={`text-xs font-mono ${isLiked ? 'text-neon-purple' : 'text-neutral-500'} group-hover/like:text-neon-purple transition-colors`}>
-                                {post.likes?.length || 0}
+                                {post.fakeLikeCount !== null && post.fakeLikeCount !== undefined ? post.fakeLikeCount : (post.likes?.length || 0)}
                             </span>
                         </motion.button>
 

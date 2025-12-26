@@ -60,6 +60,12 @@ public class Post {
     public List<Comment> getComments() { return comments; }
     public void setComments(List<Comment> comments) { this.comments = comments; }
 
+    @Column(name = "fake_like_count")
+    private Integer fakeLikeCount;
+
     public List<Repost> getReposts() { return reposts; }
     public void setReposts(List<Repost> reposts) { this.reposts = reposts; }
+
+    public Integer getFakeLikeCount() { return fakeLikeCount; }
+    public void setFakeLikeCount(Integer fakeLikeCount) { this.fakeLikeCount = fakeLikeCount; }
 }

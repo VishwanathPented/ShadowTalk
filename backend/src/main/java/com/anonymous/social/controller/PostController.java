@@ -67,4 +67,36 @@ public class PostController {
         postService.repost(id, userDetails.getUsername());
         return ResponseEntity.ok("Reposted");
     }
+
+    @Autowired
+    private com.anonymous.social.repository.ReportRepository reportRepository;
+
+    @Autowired
+    private com.anonymous.social.repository.PostRepository postRepository;
+
+    @Autowired
+    private com.anonymous.social.service.AuthService authService;
+
+    @PostMapping("/{id}/report")
+    public ResponseEntity<?> reportPost(@RequestHeader("Authorization") String token,
+                                      @PathVariable Long id,
+                                      @RequestBody Map<String, String> payload) {
+        try {
+            com.anonymous.social.model.User reporter = authService.getUserFromToken(token);
+            com.anonymous.social.model.Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
+
+            com.anonymous.social.model.Report report = new com.anonymous.social.model.Report();
+            report.setReporter(reporter);
+            report.setReportedPost(post);
+            report.setReason(payload.getOrDefault("reason", "No reason provided"));
+            report.setType("POST");
+            report.setCreatedAt(java.time.LocalDateTime.now());
+
+            reportRepository.save(report);
+
+            return ResponseEntity.ok("Post reported successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body("Report failed: " + e.getMessage());
+        }
+    }
 }

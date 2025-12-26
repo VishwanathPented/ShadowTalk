@@ -9,6 +9,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByUser_AnonymousNameOrderByCreatedAtDesc(String anonymousName);
     long countByUser(com.anonymous.social.model.User user);
 
-    @org.springframework.data.jpa.repository.Query("SELECT p FROM Post p LEFT JOIN p.likes l GROUP BY p.id ORDER BY COUNT(l) DESC")
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM Post p LEFT JOIN p.likes l GROUP BY p.id ORDER BY CASE WHEN p.fakeLikeCount IS NOT NULL THEN p.fakeLikeCount ELSE COUNT(l) END DESC")
     List<Post> findTopLikedPosts(org.springframework.data.domain.Pageable pageable);
 }

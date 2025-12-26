@@ -62,12 +62,25 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', newToken);
         setToken(newToken);
         setUser({ loggedIn: true, ...data });
-        return true;
+        return data;
     };
 
     const signup = async (email, password, alias) => {
         await api.post('/auth/signup', { email, password, alias });
         return login(email, password);
+    };
+
+    const googleLogin = async (token) => {
+        const res = await api.post('/auth/google', { token });
+        const data = res.data;
+        let newToken = data.token;
+        if (typeof newToken === 'string') {
+            newToken = newToken.replace(/^"|"$/g, '');
+        }
+        localStorage.setItem('token', newToken);
+        setToken(newToken);
+        setUser({ loggedIn: true, ...data });
+        return data;
     };
 
     const logout = () => {
@@ -102,7 +115,7 @@ export const AuthProvider = ({ children }) => {
 
 
     return (
-        <AuthContext.Provider value={{ user, login, signup, logout, regenerateIdentity, loading }}>
+        <AuthContext.Provider value={{ user, login, signup, googleLogin, logout, regenerateIdentity, loading }}>
             {loading ? <div className="text-white text-center mt-20">Initializing Session...</div> : children}
         </AuthContext.Provider>
     );

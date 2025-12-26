@@ -1,5 +1,6 @@
 package com.anonymous.social.service;
 
+import com.anonymous.social.model.BannedWord;
 import com.anonymous.social.repository.BannedWordRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ public class WordFilterService {
     @Autowired
     private BannedWordRepository bannedWordRepository;
 
-    private Set<String> bannedWordsCache = new HashSet<>();
+    private java.util.Map<String, Integer> bannedWordsCache = new java.util.HashMap<>();
 
     @PostConstruct
     public void init() {
@@ -25,30 +26,38 @@ public class WordFilterService {
 
     public void loadBannedWords() {
         bannedWordsCache = bannedWordRepository.findAll().stream()
-                .map(word -> word.getWord().toLowerCase())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toMap(
+                    word -> word.getWord().toLowerCase(),
+                    BannedWord::getBanDurationMinutes,
+                    (existing, replacement) -> existing
+                ));
         // Add some default words if DB is empty
         if (bannedWordsCache.isEmpty()) {
-            bannedWordsCache.add("badword");
-            bannedWordsCache.add("abuse");
-            bannedWordsCache.add("vulgar");
-            // In a real app, populate this properly
+            bannedWordsCache.put("badword", 5);
+            bannedWordsCache.put("abuse", 10);
+            bannedWordsCache.put("vulgar", 5);
         }
     }
 
     public boolean containsBannedWord(String content) {
-        if (content == null || content.isEmpty()) return false;
-        String lowerContent = content.toLowerCase();
-        for (String word : bannedWordsCache) {
-            if (lowerContent.contains(word)) {
-                return true;
-            }
-        }
-        return false;
+        return getBanDuration(content) > 0;
     }
 
-    public void addBannedWord(String word) {
-        bannedWordsCache.add(word.toLowerCase());
+    public int getBanDuration(String content) {
+        if (content == null || content.isEmpty()) return 0;
+        String lowerContent = content.toLowerCase();
+        int maxDuration = 0;
+
+        for (java.util.Map.Entry<String, Integer> entry : bannedWordsCache.entrySet()) {
+            if (lowerContent.contains(entry.getKey())) {
+                maxDuration = Math.max(maxDuration, entry.getValue());
+            }
+        }
+        return maxDuration;
+    }
+
+    public void addBannedWord(String word, int duration) {
+        bannedWordsCache.put(word.toLowerCase(), duration);
     }
 
     public void removeBannedWord(String word) {

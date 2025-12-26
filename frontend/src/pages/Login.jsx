@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { GoogleLogin } from '@react-oauth/google';
 
 import CyberpunkBackground from '../components/CyberpunkBackground';
 import { motion } from 'framer-motion';
@@ -11,7 +12,7 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [alias, setAlias] = useState('');
-    const { login, signup } = useAuth();
+    const { login, signup, googleLogin } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
@@ -28,8 +29,12 @@ const Login = () => {
 
         try {
             if (isLogin) {
-                await login(email, password);
+                const userData = await login(email, password);
                 toast.success('Welcome back, ghost.');
+                if (userData.role === 'ADMIN') {
+                    navigate('/shadow');
+                    return;
+                }
             } else {
                 await signup(email, password, alias);
                 toast.success('Account created anonymously.');
@@ -131,6 +136,32 @@ const Login = () => {
                             )}
                         </button>
                     </form>
+
+                    <div className="mt-6 flex justify-center">
+                        <GoogleLogin
+                            onSuccess={credentialResponse => {
+                                googleLogin(credentialResponse.credential)
+                                    .then((userData) => {
+                                        toast.success('Welcome back, verified operative.');
+                                        if (userData.role === 'ADMIN') {
+                                            navigate('/shadow');
+                                        } else {
+                                            navigate('/feed');
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.error(err);
+                                        toast.error('Google Sign-In failed: ' + (err.response?.data || "Unable to verify"));
+                                    });
+                            }}
+                            onError={() => {
+                                toast.error('Google Sign-In Failed');
+                            }}
+                            theme="filled_black"
+                            shape="pill"
+                            width="300"
+                        />
+                    </div>
 
                     <div className="mt-8 text-center">
                         <button

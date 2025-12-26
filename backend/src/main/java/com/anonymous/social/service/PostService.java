@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +39,20 @@ public class PostService {
 
     public Post createPost(String email, String content) {
         logger.info("Creating post for user: {}", email);
-        if (wordFilterService.containsBannedWord(content)) {
-            throw new IllegalArgumentException("Post contains inappropriate language.");
-        }
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getBannedUntil() != null && user.getBannedUntil().isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("You are temporarily banned until " + user.getBannedUntil());
+        }
+
+        // Banned word check
+        int banDuration = wordFilterService.getBanDuration(content);
+        if (banDuration > 0) {
+            user.setBannedUntil(LocalDateTime.now().plusMinutes(banDuration));
+            userRepository.save(user);
+            throw new IllegalArgumentException("Content contains banned words. You are banned for " + banDuration + " minutes.");
+        }
+
         Post post = new Post();
         post.setUser(user);
         post.setContent(content);
@@ -88,6 +99,11 @@ public class PostService {
 
         if (postLikeRepository.findByPostAndUser(post, user).isPresent()) {
              postLikeRepository.delete(postLikeRepository.findByPostAndUser(post, user).get());
+             // Decrement fake like count if exists
+             if (post.getFakeLikeCount() != null) {
+                 post.setFakeLikeCount(Math.max(0, post.getFakeLikeCount() - 1));
+                 postRepository.save(post);
+             }
              // Decrement reputation
              author.setReputationScore(author.getReputationScore() - 1);
              userRepository.save(author);
@@ -96,6 +112,11 @@ public class PostService {
             like.setPost(post);
             like.setUser(user);
             postLikeRepository.save(like);
+            // Increment fake like count if exists
+            if (post.getFakeLikeCount() != null) {
+                post.setFakeLikeCount(post.getFakeLikeCount() + 1);
+                postRepository.save(post);
+            }
             // Increment reputation
             author.setReputationScore(author.getReputationScore() + 1);
             userRepository.save(author);
@@ -103,10 +124,19 @@ public class PostService {
     }
 
     public Comment addComment(Long postId, String email, String content) {
-        if (wordFilterService.containsBannedWord(content)) {
-            throw new IllegalArgumentException("Comment contains inappropriate language.");
-        }
         User user = userRepository.findByEmail(email).orElseThrow();
+        // Check if user is banned
+        if (user.getBannedUntil() != null && user.getBannedUntil().isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("You are temporarily banned until " + user.getBannedUntil());
+        }
+
+        // Banned word check
+        int banDuration = wordFilterService.getBanDuration(content);
+        if (banDuration > 0) {
+            user.setBannedUntil(LocalDateTime.now().plusMinutes(banDuration));
+            userRepository.save(user);
+            throw new IllegalArgumentException("Content contains banned words. You are banned for " + banDuration + " minutes.");
+        }
         Post post = postRepository.findById(postId).orElseThrow();
 
         Comment comment = new Comment();

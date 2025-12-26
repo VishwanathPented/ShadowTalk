@@ -25,35 +25,62 @@ public class ChatController {
 
     // HTTP Endpoint to load history
     @GetMapping("/api/groups/{groupId}/messages")
-    public ResponseEntity<List<GroupChatMessage>> getMessages(@PathVariable Long groupId) {
-        return ResponseEntity.ok(chatService.getGroupMessages(groupId));
+    public ResponseEntity<List<GroupChatMessage>> getMessages(@PathVariable Long groupId, Principal principal) {
+        // Since we are "Anonymous", principal might be the token/email.
+        // If strict security, use Principal.
+        String email = principal != null ? principal.getName() : "anonymous"; // Fallback? Or require auth
+        // In this implementation, we mostly use JWT filter which sets Principal
+        return ResponseEntity.ok(chatService.getGroupMessagesForUser(groupId, email));
     }
 
     // WebSocket Endpoint: /app/chat/{groupId}
     @MessageMapping("/chat/{groupId}")
     @SendTo("/topic/group/{groupId}")
     public GroupChatMessage sendMessage(@DestinationVariable Long groupId,
-                                        @Payload Map<String, String> payload,
+                                        @Payload Map<String, Object> payload, // Changed to Object to support Lists/Ints
                                         Principal principal) {
-        // Principal is set if we configure WebSocket Auth properly.
-        // If strict auth is hard, we can trust the payload for MVP, but let's try to use Principal if possible.
-        // For this simple example, we assume SecurityContext is propogated or we pass username in payload.
-        // Let's rely on payload "email" or "token" if Principal is null, but ideally Principal works.
+        String email = principal != null ? principal.getName() : (String) payload.get("email");
+        if (email == null) throw new IllegalArgumentException("User unauthenticated");
 
-        String email = principal != null ? principal.getName() : payload.get("email");
-        System.out.println("ChatController: Received message from " + email + " for group " + groupId);
-        System.out.println("Payload: " + payload);
-
-        if (email == null || email.isEmpty()) {
-             System.out.println("Error: Email is missing in payload and Principal is null.");
-             throw new IllegalArgumentException("User unauthenticated or email missing");
-        }
-
-        String message = payload.get("message");
-        String replyToIdStr = payload.get("replyToId");
+        String message = (String) payload.get("message");
+        String replyToIdStr = (String) payload.get("replyToId");
         Long replyToId = (replyToIdStr != null && !replyToIdStr.isEmpty()) ? Long.valueOf(replyToIdStr) : null;
 
-        return chatService.saveMessage(groupId, email, message, replyToId);
+        String type = (String) payload.get("type"); // TEXT, POLL, etc.
+
+        Integer expiresInMinutes = null;
+        if (payload.containsKey("expiresIn")) {
+             expiresInMinutes = Integer.parseInt(payload.get("expiresIn").toString());
+        }
+
+        String pollQuestion = (String) payload.get("pollQuestion");
+        List<String> pollOptions = (List<String>) payload.get("pollOptions");
+
+        return chatService.saveMessage(groupId, email, message, replyToId, type, expiresInMinutes, pollQuestion, pollOptions);
+    }
+
+    @MessageMapping("/chat/{groupId}/edit")
+    @SendTo("/topic/group/{groupId}/update") // Clients listen here for edits/votes
+    public GroupChatMessage editMessage(@DestinationVariable Long groupId,
+                                        @Payload Map<String, String> payload,
+                                        Principal principal) {
+        String email = principal != null ? principal.getName() : payload.get("email");
+        Long messageId = Long.valueOf(payload.get("messageId"));
+        String newContent = payload.get("newContent");
+
+        return chatService.editMessage(messageId, email, newContent);
+    }
+
+    @MessageMapping("/chat/{groupId}/vote")
+    @SendTo("/topic/group/{groupId}/update")
+    public GroupChatMessage votePoll(@DestinationVariable Long groupId,
+                                     @Payload Map<String, Object> payload,
+                                     Principal principal) {
+        String email = principal != null ? principal.getName() : (String) payload.get("email");
+        Long messageId = Long.valueOf(payload.get("messageId").toString());
+        int optionIndex = Integer.parseInt(payload.get("optionIndex").toString());
+
+        return chatService.votePoll(messageId, email, optionIndex);
     }
 
     // Typing Status Endpoint
