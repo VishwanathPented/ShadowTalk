@@ -71,8 +71,17 @@ public class AuthService {
     public java.util.Map<String, Object> login(String email, String password) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
         var user = userRepository.findByEmail(email).orElseThrow();
-        var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), java.util.Collections.emptyList());
-        String token = jwtUtil.generateToken(java.util.Map.of("anonymousName", user.getAnonymousName()), userDetails);
+
+        // Fix: Add authorities
+        var authorities = java.util.Collections.singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole()));
+        var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), authorities);
+
+        // Fix: Add role to JWT claims
+        String token = jwtUtil.generateToken(java.util.Map.of(
+            "anonymousName", user.getAnonymousName(),
+            "role", user.getRole()
+        ), userDetails);
+
         return buildAuthResponse(user, token);
     }
 
@@ -116,8 +125,14 @@ public class AuthService {
         user.setAnonymousName(newName);
         userRepository.save(user);
 
-        var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), java.util.Collections.emptyList());
-        String newToken = jwtUtil.generateToken(java.util.Map.of("anonymousName", user.getAnonymousName()), userDetails);
+        // Fix: Add authorities and role to JWT
+        var authorities = java.util.Collections.singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole()));
+        var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), authorities);
+
+        String newToken = jwtUtil.generateToken(java.util.Map.of(
+            "anonymousName", user.getAnonymousName(),
+            "role", user.getRole()
+        ), userDetails);
 
         return buildAuthResponse(user, newToken);
     }
@@ -127,6 +142,19 @@ public class AuthService {
         // For /me endpoint, we don't necessarily need to reissue a token, but returning one is fine.
         // Or we can accept null token and just not return it.
         return buildAuthResponse(user, null);
+    }
+
+    public java.util.Map<String, Object> generateFreshToken(User user) {
+        // Fix: Add authorities and role to JWT
+        var authorities = java.util.Collections.singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole()));
+        var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), authorities);
+
+        String newToken = jwtUtil.generateToken(java.util.Map.of(
+                "anonymousName", user.getAnonymousName(),
+                "role", user.getRole()
+        ), userDetails);
+
+        return buildAuthResponse(user, newToken);
     }
 
     private java.util.Map<String, Object> buildAuthResponse(User user, String token) {

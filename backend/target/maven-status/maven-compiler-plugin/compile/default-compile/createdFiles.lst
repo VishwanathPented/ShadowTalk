@@ -11,6 +11,7 @@ com/anonymous/social/config/SecurityConfig.class
 com/anonymous/social/service/ChatService.class
 com/anonymous/social/model/BannedWord.class
 com/anonymous/social/repository/CommentRepository.class
+com/anonymous/social/config/DataInitializer.class
 com/anonymous/social/SocialPlatformApplication.class
 com/anonymous/social/repository/PostRepository.class
 com/anonymous/social/repository/BannedWordRepository.class
@@ -34,6 +35,7 @@ com/anonymous/social/repository/GroupChatMessageRepository.class
 com/anonymous/social/model/Post.class
 com/anonymous/social/listener/WebSocketEventListener.class
 com/anonymous/social/model/User.class
+com/anonymous/social/controller/AdminController.class
 com/anonymous/social/repository/HashtagRepository.class
 com/anonymous/social/controller/ChatController.class
 com/anonymous/social/model/PostLike.class

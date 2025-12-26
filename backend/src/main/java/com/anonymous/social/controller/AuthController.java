@@ -19,6 +19,11 @@ public class AuthController {
         String email = request.get("email");
         String password = request.get("password");
         String alias = request.get("alias");
+
+        if (email == null || !email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Invalid email format"));
+        }
+
         try {
             return ResponseEntity.ok(authService.register(email, password, alias));
         } catch (RuntimeException e) {
@@ -34,7 +39,8 @@ public class AuthController {
             Map<String, Object> response = authService.login(email, password);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(403).body("Invalid credentials");
+            e.printStackTrace();
+            return ResponseEntity.status(401).body("Login failed: " + e.getMessage());
         }
     }
 

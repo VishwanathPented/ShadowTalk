@@ -23,7 +23,6 @@ public class DataInitializer implements CommandLineRunner {
         // Create Default Admin if not exists
         if (userRepository.findByEmail("admin@shadow.com").isEmpty()) {
             User admin = new User();
-            admin.email = "admin@shadow.com"; // We will use setters, but for brevity in thought... wait, use setters
             admin.setEmail("admin@shadow.com");
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setAnonymousName("ShadowMaster");

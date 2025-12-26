@@ -26,6 +26,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // Raw WebSocket endpoint (No SockJS) - Better for debugging & compatibility
+        registry.addEndpoint("/ws-raw")
+                .setAllowedOriginPatterns("*");
+
+        // Legacy SockJS endpoint
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*") // Allow all origins for dev simplicity
                 .withSockJS();

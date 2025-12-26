@@ -50,4 +50,8 @@ public class WordFilterService {
     public void addBannedWord(String word) {
         bannedWordsCache.add(word.toLowerCase());
     }
+
+    public void removeBannedWord(String word) {
+        bannedWordsCache.remove(word.toLowerCase());
+    }
 }

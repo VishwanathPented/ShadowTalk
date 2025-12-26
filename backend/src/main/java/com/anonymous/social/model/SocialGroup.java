@@ -34,6 +34,14 @@ public class SocialGroup {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore // Prevent infinite recursion during serialization
+    private java.util.List<GroupChatMessage> messages;
+
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private java.util.List<GroupMember> members;
+
     public SocialGroup() {}
 
     public Long getId() { return id; }

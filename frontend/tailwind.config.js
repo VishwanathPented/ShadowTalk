@@ -7,10 +7,21 @@ export default {
     theme: {
         extend: {
             colors: {
-                'brand-dark': '#0f172a',
-                'brand-primary': '#6366f1',
-                'brand-accent': '#8b5cf6',
+                'brand-dark': '#000000', // True Black
+                'brand-primary': '#0095f6', // Social Blue
+                'brand-accent': '#262626',  // Neutral Zinc
+                'brand-surface': '#121212', // Zinc 900
+                'social-blue': '#0095f6',
+                'neon-purple': '#D300C5',
+                'neon-cyan': '#00E5FF',
             },
+            backgroundImage: {
+                'shadow-gradient': 'linear-gradient(to right, #763AF5, #A600F5, #00E5FF)',
+            },
+            fontFamily: {
+                sans: ['Inter', 'sans-serif'],
+                mono: ['JetBrains Mono', 'monospace'],
+            }
         },
     },
     plugins: [],

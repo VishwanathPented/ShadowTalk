@@ -3,6 +3,7 @@
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/service/CustomUserDetailsService.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/repository/PostLikeRepository.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/model/Post.java
+/Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/config/DataInitializer.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/utils/JwtUtil.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/model/BannedWord.java
 /Users/vishwanathpented/Desktop/Project/ShadowTalk/backend/src/main/java/com/anonymous/social/service/PostService.java

@@ -15,6 +15,10 @@ public class BannedWord {
 
     public BannedWord() {}
 
+    public BannedWord(String word) {
+        this.word = word;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

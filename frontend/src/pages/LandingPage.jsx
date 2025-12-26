@@ -1,88 +1,161 @@
+import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 const LandingPage = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, login, signup } = useAuth();
+
+    // Default to Signup for "Getting Started" feel
+    const [isLogin, setIsLogin] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    // Form States
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [alias, setAlias] = useState('');
 
     if (user && user.loggedIn) {
         return <Navigate to="/feed" replace />;
     }
 
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}$/;
+        if (!emailRegex.test(email)) {
+            toast.error("Invalid email format.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            if (isLogin) {
+                await login(email, password);
+                toast.success('Welcome back, Shadow.');
+            } else {
+                await signup(email, password, alias);
+                toast.success('Identity Created.');
+            }
+            navigate('/feed');
+        } catch (error) {
+            console.error("Auth Error:", error);
+            toast.error(isLogin ? 'Login failed.' : 'Signup failed. Email might be taken.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-slate-950 text-white overflow-hidden relative selection:bg-brand-primary selection:text-white">
-            {/* Background Effects */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-primary/20 rounded-full blur-[120px] animate-pulse"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-accent/20 rounded-full blur-[120px] animate-pulse delay-1000"></div>
-            </div>
+        <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+            {/* Mesh Background is global in index.css, just need transparency here */}
 
-            {/* Navbar Placeholder (logo only) */}
-            <nav className="relative z-10 flex justify-between items-center p-6 md:px-12">
-                <div className="text-2xl font-bold tracking-tighter bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
-                    ShadowTalk
-                </div>
-                <button
-                    onClick={() => navigate('/login')}
-                    className="px-6 py-2 rounded-full border border-slate-700 hover:border-brand-primary hover:text-brand-primary transition-all duration-300 text-sm font-medium backdrop-blur-sm"
+            <div className="w-full max-w-sm relative z-10">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
                 >
-                    Login
-                </button>
-            </nav>
+                    {/* Glass Monolith Card */}
+                    <div className="glass-panel p-8 rounded-[30px] border border-white/10 backdrop-blur-2xl bg-black/40 shadow-[0_0_50px_rgba(118,58,245,0.15)]">
 
-            {/* Hero Section */}
-            <main className="relative z-10 flex flex-col items-center justify-center text-center px-4 mt-20 md:mt-32">
-                <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-brand-primary/30 bg-brand-primary/10 text-brand-primary text-xs font-semibold tracking-wide uppercase animate-fade-in-down">
-                    The Future of Anonymous Social
-                </div>
+                        {/* Header */}
+                        <div className="text-center mb-8">
+                            <h1 className="text-5xl font-bold mb-2 font-cookie text-white tracking-wider" style={{ fontFamily: '"Billabong", "InstaFont", sans-serif' }}>
+                                ShadowTalk
+                            </h1>
+                            <p className="text-neutral-400 text-sm tracking-widest uppercase font-semibold">
+                                {isLogin ? 'RESUME SESSION' : 'INITIATE PROTOCOL'}
+                            </p>
+                        </div>
 
-                <h1 className="text-6xl md:text-8xl font-black mb-6 bg-gradient-to-r from-brand-primary via-purple-500 to-brand-accent bg-clip-text text-transparent animate-pulse-slow">
-                    ShadowTalk
-                </h1>
-                <p className="text-xl md:text-2xl text-slate-400 mb-8 max-w-2xl mx-auto leading-relaxed">
-                    Speak freely in the shadows. <span className="text-brand-primary font-semibold">One Identity. No Masks. No Traces.</span>
-                </p>
+                        {/* Form */}
+                        <form onSubmit={handleSubmit} className="space-y-4">
 
-                <div className="flex flex-col md:flex-row gap-4">
-                    <button
-                        onClick={() => navigate('/login')}
-                        className="px-8 py-4 bg-gradient-to-r from-brand-primary to-brand-accent rounded-full font-bold text-lg shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/50 transform hover:-translate-y-1 transition-all duration-300 ring-2 ring-white/10"
-                    >
-                        Enter the Void
-                    </button>
-                    <button className="px-8 py-4 bg-slate-800/50 hover:bg-slate-800 rounded-full font-bold text-lg backdrop-blur-sm border border-slate-700 hover:border-slate-600 transition-all duration-300">
-                        Learn More
-                    </button>
-                </div>
+                            {/* Signup Alias Field */}
+                            <AnimatePresence>
+                                {!isLogin && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="bg-white/5 rounded-xl border border-white/5 focus-within:border-neon-purple transition-colors p-1">
+                                            <input
+                                                type="text"
+                                                value={alias}
+                                                onChange={(e) => setAlias(e.target.value)}
+                                                className="w-full bg-transparent border-none text-white px-3 py-2 focus:outline-none placeholder-neutral-500 text-sm"
+                                                placeholder="Codename (Optional)"
+                                            />
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
-                {/* Feature Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-32 max-w-6xl w-full px-4 mb-20">
-                    <FeatureCard
-                        icon="🎭"
-                        title="Anonymous Identity"
-                        desc="Choose an alias or let us generate a cryptic codename for you. No real names required."
-                    />
-                    <FeatureCard
-                        icon="👻"
-                        title="Ghost Groups"
-                        desc="Create ephemeral communities that exist only for the moment. Discuss freely."
-                    />
-                    <FeatureCard
-                        icon="🔒"
-                        title="Secure & Private"
-                        desc="Your data is yours. Built with privacy-first architecture from the ground up."
-                    />
-                </div>
-            </main>
+                            <div className="bg-white/5 rounded-xl border border-white/5 focus-within:border-neon-cyan transition-colors p-1">
+                                <input
+                                    type="email"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full bg-transparent border-none text-white px-3 py-2 focus:outline-none placeholder-neutral-500 text-sm"
+                                    placeholder="Email"
+                                />
+                            </div>
+
+                            <div className="bg-white/5 rounded-xl border border-white/5 focus-within:border-neon-cyan transition-colors p-1">
+                                <input
+                                    type="password"
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full bg-transparent border-none text-white px-3 py-2 focus:outline-none placeholder-neutral-500 text-sm"
+                                    placeholder="Password"
+                                />
+                            </div>
+
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                type="submit"
+                                disabled={loading}
+                                className={`w-full py-3 rounded-xl font-bold text-sm text-black shadow-lg transition-all duration-300 mt-4
+                                    ${isLogin
+                                        ? 'bg-white hover:bg-neutral-200'
+                                        : 'bg-gradient-to-r from-neon-purple to-neon-cyan hover:shadow-neon-purple/50'
+                                    }`}
+                            >
+                                {loading ? 'PROCESSING...' : (isLogin ? 'ENTER' : 'JOIN THE SHADOWS')}
+                            </motion.button>
+                        </form>
+
+                        {/* Toggle */}
+                        <div className="mt-8 text-center">
+                            <button
+                                onClick={() => setIsLogin(!isLogin)}
+                                className="text-xs text-neutral-500 hover:text-white transition-colors uppercase tracking-widest font-bold"
+                            >
+                                {isLogin ? "Don't have an ID? Create One" : "Already have an ID? Login"}
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
         </div>
     );
 };
 
-const FeatureCard = ({ icon, title, desc }) => (
-    <div className="p-8 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-brand-primary/50 backdrop-blur-sm transition-all duration-300 hover:bg-slate-900/80 group text-left">
-        <div className="text-4xl mb-6 group-hover:scale-110 transition-transform duration-300">{icon}</div>
-        <h3 className="text-xl font-bold mb-3 text-white group-hover:text-brand-primary transition-colors">{title}</h3>
-        <p className="text-slate-400 leading-relaxed">{desc}</p>
+const FeatureCard = ({ number, title, desc }) => (
+    <div className="p-12 bg-brand-dark hover:bg-brand-surface group transition-colors relative overflow-hidden h-64 flex flex-col justify-between">
+        <div className="absolute top-0 right-0 p-4 opacity-10 font-black text-6xl text-white group-hover:text-acid transition-colors select-none">{number}</div>
+        <h3 className="text-2xl font-black mb-4 text-white uppercase tracking-tighter font-sans group-hover:text-acid transition-colors">{title}</h3>
+        <p className="text-neutral-500 text-sm leading-relaxed font-mono">{desc}</p>
+        <div className="w-8 h-1 bg-neutral-800 group-hover:bg-acid transition-colors mt-auto" />
     </div>
 );
 

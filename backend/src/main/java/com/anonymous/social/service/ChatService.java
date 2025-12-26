@@ -11,7 +11,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
+@Transactional
 public class ChatService {
 
     @Autowired
@@ -79,7 +82,10 @@ public class ChatService {
             chatMessageRepository.findById(replyToId).ifPresent(chatMessage::setReplyTo);
         }
 
-        return chatMessageRepository.save(chatMessage);
+        GroupChatMessage saved = chatMessageRepository.save(chatMessage);
+        chatMessageRepository.flush(); // Force commit
+        System.out.println(">>> DB PERSIST: Message Saved! ID: " + saved.getId() + " | Content: " + saved.getMessage());
+        return saved;
     }
 
     @Autowired

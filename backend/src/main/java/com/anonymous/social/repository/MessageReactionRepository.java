@@ -6,4 +6,5 @@ import java.util.Optional;
 
 public interface MessageReactionRepository extends JpaRepository<MessageReaction, Long> {
     Optional<MessageReaction> findByMessageIdAndUserId(Long messageId, Long userId);
+    void deleteByMessage_Group_Id(Long groupId);
 }

@@ -18,6 +18,14 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}$/;
+        if (!emailRegex.test(email)) {
+            toast.error("Invalid email format. Please enter a valid email address.");
+            setLoading(false);
+            return;
+        }
+
         try {
             if (isLogin) {
                 await login(email, password);

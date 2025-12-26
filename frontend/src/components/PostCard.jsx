@@ -2,7 +2,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { FaHeart, FaRegHeart, FaRegComment, FaRetweet, FaShare } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import { useState } from 'react';
 
 import { useAuth } from '../context/AuthContext';
@@ -40,66 +41,65 @@ const PostCard = ({ post, refreshPosts }) => {
     };
 
     return (
-        <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-800/60 rounded-xl p-5 hover:border-brand-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-brand-primary/5 group">
-            <div className="flex justify-between items-start mb-3">
+        <div className="border-b border-neutral-800 py-4 mb-2 last:border-0 hover:bg-neutral-900/40 transition-colors md:rounded-xl md:border md:bg-black">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 mb-3">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br from-brand-primary to-purple-600 shadow-inner">
-                        {post.user.anonymousName.substring(0, 2).toUpperCase()}
+                    <div className="story-ring w-9 h-9 p-[2px] cursor-pointer hover:scale-105 transition-transform duration-200">
+                        <div className="w-full h-full bg-black rounded-full p-[2px]">
+                            <div className="w-full h-full bg-neutral-800 rounded-full flex items-center justify-center text-xs text-white uppercase font-bold">
+                                {post.user.anonymousName.substring(0, 2)}
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-white font-semibold text-sm tracking-wide group-hover:text-brand-primary transition-colors flex items-center gap-2">
-                            {post.user.anonymousName}
-
-                        </p>
-                        <p className="text-slate-500 text-xs flex items-center gap-1">
-                            {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-                            <span className="w-1 h-1 bg-slate-600 rounded-full"></span>
-                            <span className="text-brand-primary/60 text-[10px] uppercase tracking-wider">Ghost</span>
-                        </p>
+                    <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-white leading-none">
+                            {post.user.anonymousName.toLowerCase()}
+                        </span>
+                        <span className="text-[10px] text-neutral-500">
+                            {formatDistanceToNow(new Date(post.createdAt))} ago
+                        </span>
                     </div>
                 </div>
+                <button className="text-white font-bold tracking-widest">...</button>
             </div>
 
-            <p className="text-slate-200 mb-4 whitespace-pre-wrap text-[15px] leading-relaxed font-light pl-13">
-                {post.content}
-            </p>
-            {/* Action Buttons - Instagram Style (Icons Only) */}
-            <div className="mt-4 pt-3 border-t border-slate-800/50 flex items-center gap-6">
-                <button
+            {/* Content (Image Placeholder + Text) */}
+            <div className="px-4 mb-3">
+                <p className="text-sm text-neutral-200 leading-snug whitespace-pre-wrap">
+                    {post.content}
+                </p>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 flex items-center gap-4 mb-3">
+                <motion.button
                     onClick={handleLike}
-                    className={`flex items-center gap-2 group transition-colors ${isLiked ? 'text-pink-500' : 'text-slate-400 hover:text-pink-500'
-                        }`}
-                    title="Like"
+                    className="group"
+                    whileTap={{ scale: 0.8 }}
                 >
-                    <div className={`p-2 rounded-full group-hover:bg-pink-500/10 transition-all ${isLiked ? 'bg-pink-500/10' : ''}`}>
-                        {isLiked ? <FaHeart className="w-5 h-5" /> : <FaRegHeart className="w-5 h-5" />}
-                    </div>
-                    {likes.length > 0 && <span className="text-sm font-medium">{likes.length}</span>}
-                </button>
-
-                <Link
-                    to={`/posts/${post.id}`}
-                    className="flex items-center gap-2 group text-slate-400 hover:text-blue-400 transition-colors"
-                    title="Comment"
-                >
-                    <div className="p-2 rounded-full group-hover:bg-blue-400/10 transition-all">
-                        <FaRegComment className="w-5 h-5" />
-                    </div>
-                    {comments.length > 0 && <span className="text-sm font-medium">{comments.length}</span>}
-                </Link>
-
-                <button
-                    onClick={handleRepost}
-                    className="flex items-center gap-2 group text-slate-400 hover:text-green-400 transition-colors"
-                    title="Repost"
-                >
-                    <div className="p-2 rounded-full group-hover:bg-green-400/10 transition-all">
-                        <FaRetweet className="w-5 h-5" />
-                    </div>
-                    {reposts.length > 0 && <span className="text-sm font-medium">{reposts.length}</span>}
-                </button>
+                    {isLiked ? (
+                        <FaHeart className="text-neon-purple text-2xl drop-shadow-[0_0_8px_rgba(211,0,197,0.5)]" />
+                    ) : (
+                        <FaRegHeart className="text-white text-2xl group-hover:text-neutral-400 transition-colors" />
+                    )}
+                </motion.button>
+                <div className="flex items-center gap-1">
+                    <FaRegComment className="text-white text-2xl hover:text-neutral-400 cursor-pointer" />
+                </div>
+                <FaRetweet className="text-white text-2xl hover:text-green-500 cursor-pointer" />
+                <FaShare className="text-white text-2xl hover:text-neon-cyan cursor-pointer" />
             </div>
-        </div >
+
+            {/* Likes Count */}
+            <div className="px-4 mb-1">
+                <span className="text-sm font-semibold text-white">{post.likes?.length || 0} likes</span>
+            </div>
+
+            <div className="px-4 text-xs text-neutral-500 cursor-pointer hover:text-neutral-400 transition-colors">
+                View all {comments.length} comments
+            </div>
+        </div>
     );
 };
 

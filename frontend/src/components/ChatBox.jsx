@@ -15,6 +15,7 @@ import SockJS from 'sockjs-client/dist/sockjs'; // Explicit dist import for Vite
 import { jwtDecode } from "jwt-decode";
 import api from '../api/axios';
 import { HiPaperAirplane, HiReply, HiX } from 'react-icons/hi';
+import { FaHeart } from 'react-icons/fa'; // Add FaHeart import
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ChatBox = ({ groupId }) => {
@@ -46,16 +47,23 @@ const ChatBox = ({ groupId }) => {
         // Connect WebSocket
         let client = null;
         try {
-            const wsUrl = 'http://localhost:8080/ws';
-            const socket = new SockJS(wsUrl);
+            // NATIVE WEBSOCKET CONNECTION (Robust, no polyfills needed)
+            const wsUrl = 'ws://localhost:8080/ws-raw';
+            console.log("Attempting Raw WebSocket Connection to:", wsUrl);
+
+            // Create native WebSocket
+            const socket = new WebSocket(wsUrl);
+
+            // Pass to Stomp
             client = Stomp.over(socket);
-            client.debug = null; // Disable debug logging for cleaner console
+            client.debug = (str) => console.log(str);
+            client.reconnect_delay = 5000; // Auto-reconnect
 
             const token = localStorage.getItem('token');
             const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
             client.connect(headers, (frame) => {
-                console.log('Connected: ' + frame);
+                console.log('Connected to Stomp (Raw):', frame);
                 setError(null);
                 // Chat Subscription
                 client.subscribe(`/topic/group/${groupId}`, (message) => {
@@ -204,41 +212,31 @@ const ChatBox = ({ groupId }) => {
         }
     };
 
-    return (
-        <div className="flex flex-col h-[500px] glass-panel rounded-xl overflow-hidden">
-            {error && <div className="bg-red-500/10 text-red-500 p-2 text-center text-sm">{error}</div>}
 
-            {/* Mood Indicator Bar */}
-            <div className="bg-slate-900 border-b border-slate-800 p-2 flex items-center justify-between px-4 transition-colors duration-500"
-                style={{
-                    borderColor: (() => {
-                        const recentReactions = messages.slice(-10).flatMap(m => m.reactions || []).map(r => r.emoji);
-                        const fireCount = recentReactions.filter(r => ['🔥', '😡'].includes(r)).length;
-                        const chillCount = recentReactions.filter(r => ['😂', '❤️', '👍'].includes(r)).length;
-                        if (fireCount > chillCount) return 'rgba(239, 68, 68, 0.5)'; // Red
-                        if (chillCount > fireCount) return 'rgba(168, 85, 247, 0.5)'; // Purple
-                        return 'rgba(51, 65, 85, 0.5)'; // Slate
-                    })()
-                }}
-            >
-                <div className="text-xs font-medium text-slate-400">
-                    Room Vibe: <span className="text-white">
-                        {(() => {
-                            const recentReactions = messages.slice(-10).flatMap(m => m.reactions || []).map(r => r.emoji);
-                            const fireCount = recentReactions.filter(r => ['🔥', '😡'].includes(r)).length;
-                            const chillCount = recentReactions.filter(r => ['😂', '❤️', '👍'].includes(r)).length;
-                            if (fireCount > chillCount) return '🔥 Heated';
-                            if (chillCount > fireCount) return '😎 Chill';
-                            return '😐 Neutral';
-                        })()}
-                    </span>
+    return (
+        <div className="flex flex-col h-[600px] bg-black border border-neutral-800 rounded-xl overflow-hidden">
+            {/* Header Insta Style */}
+            <div className="border-b border-neutral-800 p-4 flex items-center justify-between bg-black z-10">
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <img
+                            src={`https://ui-avatars.com/api/?name=Group+${groupId}&background=random`}
+                            className="w-8 h-8 rounded-full"
+                        />
+                        {activeUsers.length > 0 && (
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
+                        )}
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="font-semibold text-white text-sm">Shadow Group {groupId}</span>
+                        <span className="text-xs text-neutral-500">Active now</span>
+                    </div>
                 </div>
-                {/* Active Users Summary */}
                 <div className="flex -space-x-2">
+                    {/* Tiny avatars of active users */}
                     {activeUsers.slice(0, 3).map((u, i) => (
-                        <img key={i} src={`https://ui-avatars.com/api/?name=${encodeURIComponent(u)}&background=random&color=fff&size=20`} className="w-5 h-5 rounded-full border border-slate-900" />
+                        <img key={i} src={`https://ui-avatars.com/api/?name=${u}&background=random`} className="w-6 h-6 rounded-full border-2 border-black" />
                     ))}
-                    {activeUsers.length > 3 && <span className="text-[10px] text-slate-500 ml-2">+{activeUsers.length - 3}</span>}
                 </div>
             </div>
 
@@ -246,91 +244,52 @@ const ChatBox = ({ groupId }) => {
                 <AnimatePresence initial={false}>
                     {Array.isArray(messages) && messages.map((msg, idx) => {
                         const isMe = user?.email && msg.user?.email === user.email;
+                        const isSystem = msg.message.startsWith('[SYSTEM]');
+                        const showAvatar = !isMe && (idx === 0 || messages[idx - 1]?.user?.email !== msg.user?.email);
 
-                        // Upvote Analysis
-                        const upvoteCount = (msg.reactions || []).filter(r => r.emoji === '🔥').length;
-                        const isTopMessage = upvoteCount >= 3;
+                        if (isSystem) {
+                            return (
+                                <div key={idx} className="flex justify-center my-4">
+                                    <span className="text-xs text-neutral-500 bg-neutral-900 px-3 py-1 rounded-full">
+                                        {msg.message.replace('[SYSTEM]', '').trim()}
+                                    </span>
+                                </div>
+                            );
+                        }
 
                         return (
                             <motion.div
                                 key={msg.id || idx}
-                                initial={{ opacity: 0, y: 10, filter: isMe ? 'blur(0px)' : 'blur(4px)' }}
-                                whileHover={{ filter: 'blur(0px)' }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} group max-w-[80%] transition-all duration-500`}
-                                style={{ filter: isMe ? 'none' : undefined }}
-                                onClick={(e) => e.currentTarget.style.filter = 'none'} // Unblur on click for mobile
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[80%] ${isMe ? 'ml-auto' : ''}`}
                             >
-                                {msg.message.startsWith('[SYSTEM]') ? (
-                                    <div className="w-full flex justify-center my-2">
-                                        <div className="bg-slate-800/80 border border-brand-accent/30 text-brand-accent px-4 py-1 rounded-full text-xs font-bold shadow-lg backdrop-blur-sm animate-pulse">
-                                            {msg.message.replace('[SYSTEM]', '').trim()}
+                                <div className="flex gap-2 items-end">
+                                    {!isMe && (
+                                        <div className="w-7 h-7 shrink-0">
+                                            {showAvatar && (
+                                                <img
+                                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(msg.user?.anonymousName || 'U')}&background=random&color=fff`}
+                                                    className="w-full h-full rounded-full"
+                                                />
+                                            )}
                                         </div>
+                                    )}
+
+                                    <div className={`px-4 py-2 text-[15px] leading-snug rounded-2xl ${isMe
+                                        ? 'bg-social-blue text-white rounded-br-sm'
+                                        : 'bg-neutral-800 text-white rounded-bl-sm'
+                                        }`}>
+                                        {msg.replyTo && (
+                                            <div className="text-xs mb-1 opacity-70 border-l-2 border-white/20 pl-2">
+                                                Replying to: {msg.replyTo.message}
+                                            </div>
+                                        )}
+                                        {msg.message}
                                     </div>
-                                ) : (
-                                    <>
-                                        <span className={`text-xs text-slate-500 mb-1 ml-1 flex items-center gap-1 ${isTopMessage ? 'text-amber-400 font-bold' : ''}`}>
-                                            {isTopMessage && '👑'} {msg.user?.anonymousName || 'Unknown'}
-                                        </span>
-
-                                        <div className={`flex items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                                            <img
-                                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(msg.user?.anonymousName || 'U')}&background=random&color=fff&size=32`}
-                                                alt="Avatar"
-                                                className={`w-8 h-8 rounded-full shadow-md ${isTopMessage ? 'ring-2 ring-amber-500 animate-pulse' : ''}`}
-                                            />
-                                            <div className={`px-4 py-2 rounded-2xl break-words relative shadow-lg transition-all duration-300 ${isMe
-                                                ? 'bg-gradient-to-r from-brand-primary to-purple-600 text-white rounded-tr-none'
-                                                : isTopMessage
-                                                    ? 'bg-slate-800/90 text-slate-100 rounded-tl-none border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                                                    : 'bg-slate-800/80 backdrop-blur-sm text-slate-200 rounded-tl-none border border-white/5'
-                                                }`}>
-                                                {msg.replyTo && (
-                                                    <div className={`text-xs mb-2 p-2 rounded border-l-2 ${isMe ? 'bg-white/10 border-white/50' : 'bg-black/20 border-slate-500'}`}>
-                                                        <span className="font-bold block opacity-75">{msg.replyTo.user?.anonymousName || 'Unknown'}</span>
-                                                        <span className="line-clamp-1 opacity-75">{msg.replyTo.message}</span>
-                                                    </div>
-                                                )}
-                                                {msg.message}
-
-                                                {/* Reactions Display */}
-                                                {msg.reactions && msg.reactions.length > 0 && (
-                                                    <div className="flex flex-wrap gap-1 mt-1 -mb-1">
-                                                        {Object.entries(msg.reactions.reduce((acc, r) => {
-                                                            acc[r.emoji] = (acc[r.emoji] || 0) + 1;
-                                                            return acc;
-                                                        }, {})).map(([emoji, count]) => (
-                                                            <span key={emoji} className="text-xs bg-black/20 rounded px-1">{emoji} {count > 1 ? count : ''}</span>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Action Buttons (Reply & React) */}
-                                            <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button
-                                                    onClick={() => setReplyTo(msg)}
-                                                    className="p-1 text-slate-500 hover:text-white"
-                                                    title="Reply"
-                                                >
-                                                    <HiReply className="w-4 h-4" />
-                                                </button>
-                                                <div className="flex gap-1">
-                                                    {['❤️', '😂', '🔥', '👍'].map(emoji => (
-                                                        <button
-                                                            key={emoji}
-                                                            onClick={() => handleReaction(msg.id, emoji)}
-                                                            className="text-xs hover:scale-125 transition-transform"
-                                                        >
-                                                            {emoji}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
+                                </div>
+                                {/* Timestamp optional */}
+                                {/* <span className="text-[10px] text-neutral-600 mt-1 px-1">{format(new Date(msg.createdAt), 'HH:mm')}</span> */}
                             </motion.div>
                         );
                     })}
@@ -338,36 +297,34 @@ const ChatBox = ({ groupId }) => {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Typing Indicator */}
             {typingUsers.size > 0 && (
-                <div className="px-4 py-1 text-xs text-slate-500 italic">
-                    {Array.from(typingUsers).join(", ")} {typingUsers.size === 1 ? 'is' : 'are'} typing...
+                <div className="px-4 py-2 text-xs text-neutral-500">
+                    <span className="font-semibold">{Array.from(typingUsers).join(", ")}</span> is typing...
                 </div>
             )}
 
-            {replyTo && (
-                <div className="bg-slate-900/90 border-t border-slate-800 p-2 flex justify-between items-center px-4 backdrop-blur-sm">
-                    <div className="text-sm text-slate-300 border-l-2 border-brand-primary pl-2">
-                        <div className="text-brand-primary text-xs font-bold">Replying to {replyTo.user?.anonymousName}</div>
-                        <div className="line-clamp-1 opacity-75">{replyTo.message}</div>
+            <form onSubmit={handleSendMessage} className="p-3 bg-black flex gap-2 items-center">
+                <div className="p-2 text-social-blue cursor-pointer hover:bg-neutral-900 rounded-full">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                </div>
+                <div className="flex-1 relative">
+                    <input
+                        type="text"
+                        value={newMessage}
+                        onChange={handleTyping}
+                        placeholder="Message..."
+                        className="w-full bg-neutral-900 text-white placeholder-neutral-500 px-4 py-2.5 rounded-full focus:outline-none focus:ring-1 focus:ring-neutral-700"
+                    />
+                    <div className="absolute right-2 top-2.5 text-social-blue font-semibold text-sm cursor-pointer" onClick={handleSendMessage} style={{ opacity: newMessage.trim() ? 1 : 0, pointerEvents: newMessage.trim() ? 'auto' : 'none', transition: 'opacity 0.2s' }}>
+                        Send
                     </div>
-                    <button onClick={() => setReplyTo(null)} className="text-slate-500 hover:text-white">
-                        <HiX className="w-5 h-5" />
-                    </button>
                 </div>
-            )}
-
-            <form onSubmit={handleSendMessage} className="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
-                <input
-                    type="text"
-                    value={newMessage}
-                    onChange={handleTyping}
-                    placeholder="Type a message..."
-                    className="flex-1 bg-slate-900 text-slate-200 px-4 py-2 rounded-full border border-slate-800 focus:border-brand-primary focus:outline-none"
-                />
-                <button type="submit" disabled={!newMessage.trim()} className="p-2 bg-brand-primary rounded-full text-white hover:bg-brand-accent transition-colors disabled:opacity-50">
-                    <HiPaperAirplane className="w-5 h-5 rotate-90" />
-                </button>
+                {!newMessage.trim() && (
+                    <div className="p-2 text-white cursor-pointer hover:bg-neutral-900 rounded-full">
+                        <FaHeart className="w-6 h-6" />
+                        {/* Just an icon example for "Like" shortcut */}
+                    </div>
+                )}
             </form>
         </div>
     );

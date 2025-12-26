@@ -67,22 +67,42 @@ const ProfileModal = ({ onClose }) => {
                     <p className="text-slate-400 text-sm mb-6"> shadow agent </p>
 
                     <div className="grid grid-cols-2 gap-4 w-full mb-6">
-                        <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
-                            <div className="flex items-center justify-center gap-1.5 text-brand-primary mb-1">
+                        <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 relative overflow-hidden group">
+                            <div className="flex items-center justify-center gap-1.5 text-brand-primary mb-1 relative z-10">
                                 <HiLightningBolt className="w-4 h-4" />
                                 <span className="text-xs font-bold uppercase tracking-wider">Reputation</span>
                             </div>
-                            <div className="text-2xl font-bold text-white">
+                            <div className="text-2xl font-bold text-white relative z-10">
                                 {user.reputationScore || 0}
                             </div>
+                            <div className="text-[10px] font-mono mt-1 relative z-10">
+                                {(() => {
+                                    const score = user.reputationScore || 0;
+                                    if (score >= 100) return <span className="text-yellow-400">★ CYBER GOD</span>;
+                                    if (score >= 50) return <span className="text-purple-400">● SHADOW BROKER</span>;
+                                    if (score >= 10) return <span className="text-blue-400">● NEON RUNNER</span>;
+                                    return <span className="text-slate-500">● NEW BLOOD</span>;
+                                })()}
+                            </div>
+                            {/* Badge Glow */}
+                            {(() => {
+                                const score = user.reputationScore || 0;
+                                let color = "rgba(100, 116, 139, 0.1)"; // Slate
+                                if (score >= 100) color = "rgba(250, 204, 21, 0.2)"; // Yellow
+                                else if (score >= 50) color = "rgba(192, 132, 252, 0.2)"; // Purple
+                                else if (score >= 10) color = "rgba(96, 165, 250, 0.2)"; // Blue
+
+                                return <div className="absolute inset-0 z-0 transition-colors duration-500" style={{ backgroundColor: color }}></div>;
+                            })()}
                         </div>
                         <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
                             <div className="flex items-center justify-center gap-1.5 text-purple-400 mb-1">
-                                <span className="text-xs font-bold uppercase tracking-wider">Posts</span>
+                                <span className="text-xs font-bold uppercase tracking-wider">Intercepts</span>
                             </div>
                             <div className="text-2xl font-bold text-white">
                                 {user.postCount || 0}
                             </div>
+                            <div className="text-[10px] text-slate-500 mt-1 font-mono">GLOBAL POOSTS</div>
                         </div>
                     </div>
                     {user.createdAt && (
