@@ -71,6 +71,12 @@ public class PostService {
         return posts;
     }
 
+    public List<Post> getPostsByUser(String username) {
+        List<Post> posts = postRepository.findByUser_AnonymousNameOrderByCreatedAtDesc(username);
+        logger.info("Retrieved {} posts for user {}", posts.size(), username);
+        return posts;
+    }
+
     public void likePost(Long postId, String email) {
         User user = userRepository.findByEmail(email).orElseThrow();
         Post post = postRepository.findById(postId).orElseThrow();

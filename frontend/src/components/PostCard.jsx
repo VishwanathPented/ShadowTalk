@@ -41,64 +41,92 @@ const PostCard = ({ post, refreshPosts }) => {
     };
 
     return (
-        <div className="border-b border-neutral-800 py-4 mb-2 last:border-0 hover:bg-neutral-900/40 transition-colors md:rounded-xl md:border md:bg-black">
+        <div className="border-b border-white/5 py-4 mb-2 last:border-0 transition-all md:rounded-2xl md:bg-white/5 md:backdrop-blur-md md:border md:border-white/5 hover:border-white/20 hover:shadow-[0_0_30px_rgba(118,58,245,0.1)] group relative overflow-hidden">
+            {/* Subtle Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-neon-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+
             {/* Header */}
-            <div className="flex items-center justify-between px-4 mb-3">
+            <div className="flex items-center justify-between px-4 mb-4 relative z-10">
                 <div className="flex items-center gap-3">
-                    <div className="story-ring w-9 h-9 p-[2px] cursor-pointer hover:scale-105 transition-transform duration-200">
-                        <div className="w-full h-full bg-black rounded-full p-[2px]">
-                            <div className="w-full h-full bg-neutral-800 rounded-full flex items-center justify-center text-xs text-white uppercase font-bold">
-                                {post.user.anonymousName.substring(0, 2)}
+                    <Link to={`/profile/${post.user.anonymousName}`}>
+                        <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-neon-purple to-neon-cyan cursor-pointer hover:shadow-[0_0_15px_rgba(0,229,255,0.5)] transition-all">
+                            <div className="w-full h-full bg-black rounded-full p-[2px] overflow-hidden">
+                                <img
+                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(post.user.anonymousName)}&background=random&color=fff&size=50`}
+                                    alt="avatar"
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                         </div>
-                    </div>
+                    </Link>
                     <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-white leading-none">
-                            {post.user.anonymousName.toLowerCase()}
-                        </span>
-                        <span className="text-[10px] text-neutral-500">
+                        <Link to={`/profile/${post.user.anonymousName}`}>
+                            <span className="text-sm font-bold text-white leading-none tracking-wide hover:text-neon-cyan cursor-pointer transition-colors">
+                                {post.user.anonymousName}
+                            </span>
+                        </Link>
+                        <span className="text-[10px] text-neutral-400 font-mono mt-1">
                             {formatDistanceToNow(new Date(post.createdAt))} ago
                         </span>
                     </div>
                 </div>
-                <button className="text-white font-bold tracking-widest">...</button>
+                <button className="text-neutral-500 hover:text-white transition-colors">
+                    <span className="text-xl leading-none mb-2 block">...</span>
+                </button>
             </div>
 
-            {/* Content (Image Placeholder + Text) */}
-            <div className="px-4 mb-3">
-                <p className="text-sm text-neutral-200 leading-snug whitespace-pre-wrap">
+            {/* Content */}
+            <div className="px-4 mb-4 relative z-10">
+                <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap font-light">
                     {post.content}
                 </p>
             </div>
 
-            {/* Actions */}
-            <div className="px-4 flex items-center gap-4 mb-3">
-                <motion.button
-                    onClick={handleLike}
-                    className="group"
-                    whileTap={{ scale: 0.8 }}
-                >
-                    {isLiked ? (
-                        <FaHeart className="text-neon-purple text-2xl drop-shadow-[0_0_8px_rgba(211,0,197,0.5)]" />
-                    ) : (
-                        <FaRegHeart className="text-white text-2xl group-hover:text-neutral-400 transition-colors" />
-                    )}
-                </motion.button>
-                <div className="flex items-center gap-1">
-                    <FaRegComment className="text-white text-2xl hover:text-neutral-400 cursor-pointer" />
+            {/* Actions Bar (Glass Pill) */}
+            <div className="px-4 mb-2 relative z-10">
+                <div className="flex items-center justify-between bg-black/40 rounded-full px-4 py-2 border border-white/5 backdrop-blur-sm">
+                    <div className="flex items-center gap-6">
+                        <motion.button
+                            onClick={handleLike}
+                            className="flex items-center gap-2 group/like"
+                            whileTap={{ scale: 0.8 }}
+                        >
+                            {isLiked ? (
+                                <FaHeart className="text-neon-purple text-lg drop-shadow-[0_0_8px_rgba(211,0,197,0.8)]" />
+                            ) : (
+                                <FaRegHeart className="text-neutral-400 text-lg group-hover/like:text-neon-purple transition-colors" />
+                            )}
+                            <span className={`text-xs font-mono ${isLiked ? 'text-neon-purple' : 'text-neutral-500'} group-hover/like:text-neon-purple transition-colors`}>
+                                {post.likes?.length || 0}
+                            </span>
+                        </motion.button>
+
+                        <button className="flex items-center gap-2 group/comment">
+                            <FaRegComment className="text-neutral-400 text-lg group-hover/comment:text-neon-cyan transition-colors" />
+                            <span className="text-xs font-mono text-neutral-500 group-hover/comment:text-neon-cyan transition-colors">
+                                {comments.length}
+                            </span>
+                        </button>
+
+                        <button className="flex items-center gap-2 group/repost">
+                            <FaRetweet className="text-neutral-400 text-lg group-hover/repost:text-green-400 transition-colors" />
+                        </button>
+                    </div>
+
+                    <button className="text-neutral-500 hover:text-white transition-colors">
+                        <FaShare />
+                    </button>
                 </div>
-                <FaRetweet className="text-white text-2xl hover:text-green-500 cursor-pointer" />
-                <FaShare className="text-white text-2xl hover:text-neon-cyan cursor-pointer" />
             </div>
 
-            {/* Likes Count */}
-            <div className="px-4 mb-1">
-                <span className="text-sm font-semibold text-white">{post.likes?.length || 0} likes</span>
-            </div>
-
-            <div className="px-4 text-xs text-neutral-500 cursor-pointer hover:text-neutral-400 transition-colors">
-                View all {comments.length} comments
-            </div>
+            {/* View Comments Link */}
+            {comments.length > 0 && (
+                <div className="px-6 pb-2 relative z-10">
+                    <span className="text-[10px] text-neutral-500 cursor-pointer hover:text-neon-cyan transition-colors uppercase tracking-wider font-bold">
+                        View all comments
+                    </span>
+                </div>
+            )}
         </div>
     );
 };

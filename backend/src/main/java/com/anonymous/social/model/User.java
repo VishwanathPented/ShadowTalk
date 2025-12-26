@@ -37,6 +37,19 @@ public class User {
     @Column(nullable = false)
     private String role = "USER";
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_follows",
+        joinColumns = @JoinColumn(name = "follower_id"),
+        inverseJoinColumns = @JoinColumn(name = "following_id")
+    )
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"followers", "following", "password"})
+    private java.util.Set<User> following = new java.util.HashSet<>();
+
+    @ManyToMany(mappedBy = "following", fetch = FetchType.EAGER)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"followers", "following", "password"})
+    private java.util.Set<User> followers = new java.util.HashSet<>();
+
     public User() {}
 
     public User(Long id, String email, String password, String anonymousName, String avatarColor, LocalDateTime createdAt, String role) {
@@ -72,4 +85,10 @@ public class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public java.util.Set<User> getFollowing() { return following; }
+    public void setFollowing(java.util.Set<User> following) { this.following = following; }
+
+    public java.util.Set<User> getFollowers() { return followers; }
+    public void setFollowers(java.util.Set<User> followers) { this.followers = followers; }
 }

@@ -20,19 +20,13 @@ const TrendingSidebar = () => {
     if (hashtags.length === 0) return null;
 
     return (
-        <div className="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-4 sticky top-4 shadow-xl shadow-black/20">
-            <h3 className="text-white font-bold flex items-center gap-2 mb-4">
-                <HiTrendingUp className="text-brand-primary" />
-                Trending
-            </h3>
-            <div className="space-y-3">
-                {hashtags.map(tag => (
-                    <div key={tag.id} className="flex justify-between items-center group cursor-pointer hover:bg-slate-800/50 p-2 rounded transition-colors">
-                        <span className="text-slate-300 group-hover:text-brand-primary transition-colors">#{tag.name}</span>
-                        <span className="text-xs text-slate-500">{tag.usageCount} posts</span>
-                    </div>
-                ))}
-            </div>
+        <div className="space-y-4">
+            {hashtags.map(tag => (
+                <div key={tag.id} className="flex justify-between items-center group cursor-pointer p-2 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
+                    <span className="text-neutral-400 group-hover:text-neon-cyan font-mono transition-colors">#{tag.name}</span>
+                    <span className="text-[10px] text-neutral-600 group-hover:text-neutral-500 font-bold">{tag.usageCount} NODES</span>
+                </div>
+            ))}
         </div>
     );
 };
