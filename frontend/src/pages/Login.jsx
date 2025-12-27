@@ -69,7 +69,7 @@ const Login = () => {
             }
         } catch (error) {
             console.error("Auth Error:", error);
-            const msg = error.response?.data?.message || error.message;
+            const msg = error.response?.data?.message || (typeof error.response?.data === 'string' ? error.response?.data : error.message);
             toast.error('Operation failed: ' + msg);
         } finally {
             setLoading(false);
