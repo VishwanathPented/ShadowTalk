@@ -227,9 +227,7 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!user.isVerified()) {
-            throw new RuntimeException("Account not verified");
-        }
+        // Allow unverified users to reset password as it proves email ownership
 
         String otp = String.format("%06d", new Random().nextInt(999999));
         user.setOtp(otp);
@@ -254,6 +252,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setOtp(null);
         user.setOtpExpiry(null);
+        user.setVerified(true); // Auto-verify since they proved email ownership
         userRepository.save(user);
     }
 
