@@ -56,7 +56,8 @@ public class EmailService {
             } catch (Exception e) {
                 System.err.println("Failed to send email: " + e.getMessage());
                 e.printStackTrace();
-                throw new RuntimeException("Failed to send email: " + e.getMessage());
+                // We swallow the error so the UI proceeds to the OTP screen.
+                // The user can then retrieve the OTP from the server logs as a fallback.
             }
         } else {
             System.out.println("JavaMailSender not configured, skipping actual email send.");
