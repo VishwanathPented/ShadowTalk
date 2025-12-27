@@ -56,6 +56,7 @@ public class EmailService {
             } catch (Exception e) {
                 System.err.println("Failed to send email: " + e.getMessage());
                 e.printStackTrace();
+                throw new RuntimeException("Failed to send email: " + e.getMessage());
             }
         } else {
             System.out.println("JavaMailSender not configured, skipping actual email send.");
