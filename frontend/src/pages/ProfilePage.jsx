@@ -86,59 +86,107 @@ const ProfilePage = () => {
     return (
         <div className="pt-24 pb-20 max-w-4xl mx-auto px-4 min-h-screen">
             {/* Profile Header */}
-            <div className="glass-panel rounded-3xl p-8 mb-8 bg-black/40 backdrop-blur-xl border border-white/5 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-neon-purple/10 blur-[80px] rounded-full pointer-events-none"></div>
+            <div className="relative mb-12">
+                {/* Holographic Scanner Overlay */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 z-20 pointer-events-none rounded-3xl overflow-hidden"
+                >
+                    <div className="w-full h-[2px] bg-neon-green shadow-[0_0_20px_#0f0] absolute top-0 animate-scanline"></div>
+                </motion.div>
 
-                <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                    {/* Avatar */}
-                    <div className="w-32 h-32 rounded-full p-[4px] bg-gradient-to-tr from-neon-purple to-neon-cyan shadow-[0_0_30px_rgba(118,58,245,0.3)]">
-                        <div className="w-full h-full bg-black rounded-full overflow-hidden p-[2px]">
-                            <img
-                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.anonymousName)}&background=random&color=fff&size=128`}
-                                alt={profile.anonymousName}
-                                className="w-full h-full object-cover rounded-full"
-                            />
+                <div className="glass-panel rounded-3xl p-8 bg-black/60 backdrop-blur-xl border border-white/10 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-neon-purple/20 blur-[100px] rounded-full pointer-events-none"></div>
+
+                    {/* ID Card "Verified" Stamp */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 2, rotate: -20 }}
+                        animate={{ opacity: 1, scale: 1, rotate: -15 }}
+                        transition={{ delay: 1.8, type: "spring" }}
+                        className="absolute top-8 right-8 z-10 border-4 border-neon-green text-neon-green font-black text-xl px-4 py-2 rounded uppercase tracking-widest opacity-0 transform rotate-[-15deg]"
+                    >
+                        Verified Ops
+                    </motion.div>
+
+                    <div className="flex flex-col md:flex-row items-center gap-10 relative z-10">
+                        {/* Avatar Box */}
+                        <div className="relative">
+                            <div className="w-40 h-40 hexagon-border shadow-[0_0_50px_rgba(118,58,245,0.3)]">
+                                <div className="hexagon-content bg-neutral-900">
+                                    <img
+                                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.anonymousName)}&background=random&color=fff&size=128`}
+                                        alt={profile.anonymousName}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            </div>
+                            <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-black border border-neon-cyan text-neon-cyan text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                                Lvl. {(profile.reputationScore / 10).toFixed(0)}
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Info */}
-                    <div className="flex-1 text-center md:text-left">
-                        <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">{profile.anonymousName}</h1>
-                        <p className="text-neutral-400 font-mono text-sm mb-4">
-                            MEMBER SINCE {formatDistanceToNow(new Date(profile.createdAt)).toUpperCase()} AGO
-                        </p>
+                        {/* Info & Hex Stats */}
+                        <div className="flex-1 text-center md:text-left">
+                            <h1 className="text-4xl font-black text-white mb-1 tracking-tighter uppercase glitch-text" data-text={profile.anonymousName}>{profile.anonymousName}</h1>
+                            <p className="text-neutral-400 font-mono text-xs mb-6 flex items-center justify-center md:justify-start gap-2">
+                                <span className="w-2 h-2 bg-neon-green rounded-full animate-pulse"></span>
+                                OPERATIVE SINCE {new Date(profile.createdAt).getFullYear()} // {formatDistanceToNow(new Date(profile.createdAt)).toUpperCase()} AGO
+                            </p>
 
-                        <div className="flex items-center justify-center md:justify-start gap-8 mb-6">
-                            <div className="text-center md:text-left">
-                                <span className="block text-2xl font-bold text-white">{profile.postsCount || posts.length}</span>
-                                <span className="text-xs text-neutral-500 tracking-wider">POSTS</span>
+                            <div className="flex flex-wrap justify-center md:justify-start gap-6 mb-8">
+                                {/* Hex Stat Item */}
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="w-20 h-24 hexagon-border">
+                                        <div className="hexagon-content bg-neutral-900/80 group-hover:bg-neutral-800 transition-colors">
+                                            <span className="text-xl font-bold text-white">{profile.postsCount || posts.length}</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] text-neutral-500 font-bold tracking-wider">POSTS</span>
+                                </div>
+
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="w-20 h-24 hexagon-border backdrop-blur-md">
+                                        <div className="hexagon-content bg-neutral-900/80 group-hover:bg-neutral-800 transition-colors">
+                                            <span className="text-xl font-bold text-neon-purple">{profile.followersCount}</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] text-neutral-500 font-bold tracking-wider">FOLLOWERS</span>
+                                </div>
+
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="w-20 h-24 hexagon-border">
+                                        <div className="hexagon-content bg-neutral-900/80 group-hover:bg-neutral-800 transition-colors">
+                                            <span className="text-xl font-bold text-white">{profile.followingCount}</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] text-neutral-500 font-bold tracking-wider">FOLLOWING</span>
+                                </div>
+
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="w-20 h-24 hexagon-border shadow-[0_0_15px_rgba(0,229,255,0.3)]">
+                                        <div className="hexagon-content bg-black/80">
+                                            <span className="text-xl font-bold text-neon-cyan">{profile.reputationScore}</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] text-neon-cyan/70 font-bold tracking-wider glow-text">REP</span>
+                                </div>
                             </div>
-                            <div className="text-center md:text-left">
-                                <span className="block text-2xl font-bold text-white">{profile.followersCount}</span>
-                                <span className="text-xs text-neutral-500 tracking-wider">FOLLOWERS</span>
-                            </div>
-                            <div className="text-center md:text-left">
-                                <span className="block text-2xl font-bold text-white">{profile.followingCount}</span>
-                                <span className="text-xs text-neutral-500 tracking-wider">FOLLOWING</span>
-                            </div>
-                            <div className="text-center md:text-left">
-                                <span className="block text-2xl font-bold text-neon-cyan">{profile.reputationScore}</span>
-                                <span className="text-xs text-neutral-500 tracking-wider">REPUTATION</span>
-                            </div>
+
+                            {currentUser && currentUser.anonymousName !== profile.anonymousName && (
+                                <button
+                                    onClick={handleFollow}
+                                    disabled={followLoading}
+                                    className={`px-10 py-3 rounded-xl font-bold text-sm tracking-[0.2em] transition-all uppercase clip-path-button relative overflow-hidden group/btn ${profile.isFollowing
+                                        ? 'bg-transparent border border-white/20 text-white hover:border-red-500 hover:text-red-500'
+                                        : 'bg-neon-purple text-white hover:bg-neon-purple/90 shadow-[0_0_20px_rgba(118,58,245,0.4)]'
+                                        }`}
+                                >
+                                    <span className="relative z-10">{followLoading ? 'PROCESSING...' : profile.isFollowing ? 'DISCONNECT' : 'INITIALIZE LINK'}</span>
+                                    {!profile.isFollowing && <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-500 skew-x-12"></div>}
+                                </button>
+                            )}
                         </div>
-
-                        {currentUser && currentUser.anonymousName !== profile.anonymousName && (
-                            <button
-                                onClick={handleFollow}
-                                disabled={followLoading}
-                                className={`px-8 py-2 rounded-full font-bold text-sm tracking-wide transition-all ${profile.isFollowing
-                                    ? 'bg-transparent border border-white/20 text-white hover:border-red-500 hover:text-red-500'
-                                    : 'bg-neon-purple text-white hover:bg-neon-purple/80 shadow-[0_0_15px_rgba(118,58,245,0.4)]'
-                                    }`}
-                            >
-                                {followLoading ? 'PROCESSING...' : profile.isFollowing ? 'UNFOLLOW' : 'FOLLOW'}
-                            </button>
-                        )}
                     </div>
                 </div>
             </div>

@@ -28,6 +28,9 @@ public class Post {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "theme")
+    private String theme;
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostLike> likes;
 
@@ -53,6 +56,9 @@ public class Post {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getTheme() { return theme; }
+    public void setTheme(String theme) { this.theme = theme; }
 
     public List<PostLike> getLikes() { return likes; }
     public void setLikes(List<PostLike> likes) { this.likes = likes; }

@@ -24,9 +24,9 @@ public class PostController {
     private PostService postService;
 
     @GetMapping
-    public List<Post> getAllPosts() {
-        logger.info("Request received to get all posts");
-        return postService.getAllPosts();
+    public List<Post> getAllPosts(@RequestParam(required = false) String timeRange) {
+        logger.info("Request received to get all posts with filter: {}", timeRange);
+        return postService.getAllPosts(timeRange);
     }
 
     @GetMapping("/top")
@@ -38,16 +38,24 @@ public class PostController {
     public ResponseEntity<?> createPost(@RequestBody Map<String, String> request,
                                         @AuthenticationPrincipal UserDetails userDetails) {
         logger.info("Request received to create post for user: {}", userDetails.getUsername());
+        checkTheme(request);
         try {
-            return ResponseEntity.ok(postService.createPost(userDetails.getUsername(), request.get("content")));
+            return ResponseEntity.ok(postService.createPost(userDetails.getUsername(), request.get("content"), request.get("theme")));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
+    private void checkTheme(Map<String, String> request) {
+        // Optional validation
+    }
+
     @PostMapping("/{id}/like")
-    public ResponseEntity<?> likePost(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
-        postService.likePost(id, userDetails.getUsername());
+    public ResponseEntity<?> likePost(@PathVariable Long id,
+                                      @RequestBody(required = false) Map<String, String> request,
+                                      @AuthenticationPrincipal UserDetails userDetails) {
+        String reactionType = request != null ? request.get("reactionType") : null;
+        postService.likePost(id, userDetails.getUsername(), reactionType);
         return ResponseEntity.ok("Liked/Unliked");
     }
 

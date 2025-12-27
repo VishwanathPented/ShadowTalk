@@ -307,7 +307,7 @@ public class AdminController {
 
         // Use the admin's identity to post
         String adminEmail = authService.extractEmail(token.substring(7));
-        postService.createPost(adminEmail, content);
+        postService.createPost(adminEmail, content, "Announcement");
 
         // Optional: We could boost it or pin it, but for now just posting as Admin is enough.
         return ResponseEntity.ok("System Message Injected to Feed");

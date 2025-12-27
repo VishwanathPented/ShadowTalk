@@ -19,6 +19,9 @@ public class PostLike {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "reaction_type")
+    private String reactionType = "HEART"; // Default
+
     public PostLike() {}
 
     public Long getId() { return id; }
@@ -29,4 +32,7 @@ public class PostLike {
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+
+    public String getReactionType() { return reactionType; }
+    public void setReactionType(String reactionType) { this.reactionType = reactionType; }
 }

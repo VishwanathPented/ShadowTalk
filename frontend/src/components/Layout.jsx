@@ -1,10 +1,13 @@
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import CyberpunkBackground from './CyberpunkBackground';
+import BroadcastPopup from './BroadcastPopup';
 
 const Layout = () => {
     return (
         <div className="min-h-screen text-neutral-200 pb-20 md:pb-0 md:pt-0 md:pl-20 selection:bg-neon-cyan selection:text-black font-sans">
+            <CyberpunkBackground />
+            <BroadcastPopup />
             <Navbar />
             <main className="container mx-auto px-4 py-8 max-w-[1920px]">
                 <Outlet />

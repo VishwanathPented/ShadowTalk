@@ -37,7 +37,7 @@ public class PostService {
     @Autowired
     private WordFilterService wordFilterService;
 
-    public Post createPost(String email, String content) {
+    public Post createPost(String email, String content, String theme) {
         logger.info("Creating post for user: {}", email);
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -56,6 +56,7 @@ public class PostService {
         Post post = new Post();
         post.setUser(user);
         post.setContent(content);
+        post.setTheme(theme != null && !theme.isEmpty() ? theme : "General");
 
         processHashtags(content);
 
@@ -76,9 +77,24 @@ public class PostService {
         }
     }
 
-    public List<Post> getAllPosts() {
-        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
-        logger.info("Retrieved {} posts", posts.size());
+    public List<Post> getAllPosts(String timeFilter) {
+        java.time.LocalDateTime cutoff = null;
+        if (timeFilter != null) {
+            switch (timeFilter) {
+                case "today": cutoff = LocalDateTime.now().minusHours(24); break;
+                case "3days": cutoff = LocalDateTime.now().minusDays(3); break;
+                case "week": cutoff = LocalDateTime.now().minusWeeks(1); break;
+                case "month": cutoff = LocalDateTime.now().minusMonths(1); break;
+            }
+        }
+
+        List<Post> posts;
+        if (cutoff != null) {
+            posts = postRepository.findAllByCreatedAtAfterOrderByCreatedAtDesc(cutoff);
+        } else {
+            posts = postRepository.findAllByOrderByCreatedAtDesc();
+        }
+        logger.info("Retrieved {} posts (filter: {})", posts.size(), timeFilter);
         return posts;
     }
 
@@ -92,27 +108,40 @@ public class PostService {
         return postRepository.findTopLikedPosts(org.springframework.data.domain.PageRequest.of(0, limit));
     }
 
-    public void likePost(Long postId, String email) {
+    public void likePost(Long postId, String email, String reactionType) {
         User user = userRepository.findByEmail(email).orElseThrow();
         Post post = postRepository.findById(postId).orElseThrow();
         User author = post.getUser();
+        String finalReactionStart = reactionType != null ? reactionType : "HEART";
 
-        if (postLikeRepository.findByPostAndUser(post, user).isPresent()) {
-             postLikeRepository.delete(postLikeRepository.findByPostAndUser(post, user).get());
-             // Decrement fake like count if exists
-             if (post.getFakeLikeCount() != null) {
-                 post.setFakeLikeCount(Math.max(0, post.getFakeLikeCount() - 1));
-                 postRepository.save(post);
+        java.util.Optional<PostLike> existingLikeOpt = postLikeRepository.findByPostAndUser(post, user);
+
+        if (existingLikeOpt.isPresent()) {
+             PostLike existing = existingLikeOpt.get();
+             if (existing.getReactionType().equals(finalReactionStart)) {
+                 // Toggle OFF
+                 postLikeRepository.delete(existing);
+                 // Decrement fake like count
+                 if (post.getFakeLikeCount() != null) {
+                     post.setFakeLikeCount(Math.max(0, post.getFakeLikeCount() - 1));
+                     postRepository.save(post);
+                 }
+                 // Decrement reputation
+                 author.setReputationScore(author.getReputationScore() - 1);
+                 userRepository.save(author);
+             } else {
+                 // Change Reaction Type
+                 existing.setReactionType(finalReactionStart);
+                 postLikeRepository.save(existing);
              }
-             // Decrement reputation
-             author.setReputationScore(author.getReputationScore() - 1);
-             userRepository.save(author);
         } else {
+            // New Reaction
             PostLike like = new PostLike();
             like.setPost(post);
             like.setUser(user);
+            like.setReactionType(finalReactionStart);
             postLikeRepository.save(like);
-            // Increment fake like count if exists
+            // Increment fake like count
             if (post.getFakeLikeCount() != null) {
                 post.setFakeLikeCount(post.getFakeLikeCount() + 1);
                 postRepository.save(post);

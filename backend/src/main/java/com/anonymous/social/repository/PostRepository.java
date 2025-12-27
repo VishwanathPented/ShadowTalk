@@ -11,4 +11,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @org.springframework.data.jpa.repository.Query("SELECT p FROM Post p LEFT JOIN p.likes l GROUP BY p.id ORDER BY CASE WHEN p.fakeLikeCount IS NOT NULL THEN p.fakeLikeCount ELSE COUNT(l) END DESC")
     List<Post> findTopLikedPosts(org.springframework.data.domain.Pageable pageable);
+
+    List<Post> findAllByCreatedAtAfterOrderByCreatedAtDesc(java.time.LocalDateTime date);
 }

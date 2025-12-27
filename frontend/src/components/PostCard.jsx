@@ -11,37 +11,64 @@ import { useAuth } from '../context/AuthContext';
 const PostCard = ({ post, refreshPosts }) => {
     const { user } = useAuth();
 
+    const getThemeStyles = (theme) => {
+        switch (theme) {
+            case 'Confession': return 'bg-purple-900/30 text-purple-300 border-purple-500/30';
+            case 'Question': return 'bg-blue-900/30 text-blue-300 border-blue-500/30';
+            case 'Rant': return 'bg-red-900/30 text-red-300 border-red-500/30';
+            case 'Happy': return 'bg-green-900/30 text-green-300 border-green-500/30';
+            case 'Sad': return 'bg-indigo-900/30 text-indigo-300 border-indigo-500/30';
+            default: return 'bg-neutral-800/50 text-neutral-400 border-neutral-700/30';
+        }
+    };
+
     // Safety check for arrays
     const likes = post.likes || [];
     const comments = post.comments || [];
     const reposts = post.reposts || [];
 
-    // Check if current user has liked
-    // Assuming backend returns user object in likes list. If not, we might need a different check.
-    // Based on PostLike.java: private User user;
-    const isLiked = likes.some(like => like.user?.email === user?.email);
-
+    // Reaction Logic
+    const REACTIONS = ['❤️', '😂', '🔥', '😢', '👏'];
+    const userLike = likes.find(like => like.user?.email === user?.email);
+    const userReaction = userLike?.reactionType || null;
+    const isLiked = !!userLike;
+    const [showReactions, setShowReactions] = useState(false);
     // Particle State
     const [particles, setParticles] = useState([]);
 
-    const handleLike = async () => {
-        // Optimistic UI update handled by parent or local state usually, but here we trigger effect
-        if (!isLiked) {
-            // Trigger Explosion
-            const newParticles = Array.from({ length: 12 }).map((_, i) => ({
-                id: Date.now() + i,
-                angle: (i / 12) * 360,
-                distance: 20 + Math.random() * 30,
-            }));
-            setParticles(newParticles);
-            setTimeout(() => setParticles([]), 800);
+    const triggerExplosion = () => {
+        const newParticles = Array.from({ length: 12 }).map((_, i) => ({
+            id: Date.now() + i,
+            angle: (i / 12) * 360,
+            distance: 20 + Math.random() * 30,
+        }));
+        setParticles(newParticles);
+        setTimeout(() => setParticles([]), 800);
+    };
+
+    const handleReaction = async (emoji) => {
+        // Trigger explosion if adding reaction or changing it (optimistic check or always)
+        // If not liked, definitely explode. If liked and changing, maybe?
+        if (!isLiked || (userReaction && userReaction !== emoji)) {
+            triggerExplosion();
         }
 
         try {
-            await api.post(`/api/posts/${post.id}/like`);
+            await api.post(`/api/posts/${post.id}/like`, { reactionType: emoji });
             refreshPosts && refreshPosts();
         } catch (error) {
-            toast.error('Failed to like post');
+            toast.error('Failed to react');
+        }
+        setShowReactions(false);
+    };
+
+    const handleLikeClick = () => {
+        if (isLiked && userReaction === 'HEART') {
+            handleReaction('HEART'); // Will toggle off if same
+        } else if (isLiked) {
+            handleReaction(userReaction); // Untoggle current
+        } else {
+            handleReaction('HEART');
         }
     };
 
@@ -66,6 +93,8 @@ const PostCard = ({ post, refreshPosts }) => {
             }
         }
     };
+
+    // Particle State (Keep existing)
 
     return (
         <div className="relative group rounded-2xl mb-4 transition-all duration-300 hover:scale-[1.01]">
@@ -99,6 +128,11 @@ const PostCard = ({ post, refreshPosts }) => {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        {post.theme && post.theme !== 'General' && (
+                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${getThemeStyles(post.theme)}`}>
+                                {post.theme}
+                            </span>
+                        )}
                         <button onClick={handleReport} className="text-neutral-600 hover:text-red-500 transition-colors">
                             <FaFlag className="text-xs" />
                         </button>
@@ -116,57 +150,68 @@ const PostCard = ({ post, refreshPosts }) => {
                 <div className="px-4 pb-4 relative z-10">
                     <div className="flex items-center justify-between bg-black/40 rounded-full px-4 py-2 border border-white/5 backdrop-blur-sm">
                         <div className="flex items-center gap-6">
-                            <motion.button
-                                onClick={handleLike}
-                                className="flex items-center gap-2 group/like relative"
-                                whileTap={{ scale: 0.8 }}
+
+                            {/* Reaction Button Container */}
+                            <div
+                                className="relative flex items-center"
+                                onMouseEnter={() => setShowReactions(true)}
+                                onMouseLeave={() => setShowReactions(false)}
                             >
-                                {/* Particle Explosion */}
+                                {/* Reaction Picker */}
                                 <AnimatePresence>
-                                    {particles.map((p) => (
+                                    {showReactions && (
                                         <motion.div
-                                            key={p.id}
-                                            initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
-                                            animate={{
-                                                x: Math.cos(p.angle * Math.PI / 180) * p.distance,
-                                                y: Math.sin(p.angle * Math.PI / 180) * p.distance,
-                                                scale: 1,
-                                                opacity: 0
-                                            }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.6, ease: "easeOut" }}
-                                            className="absolute left-2 top-2 w-2 h-2 text-neon-purple pointer-events-none"
+                                            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                                            animate={{ opacity: 1, y: -45, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                                            className="absolute bottom-full left-0 mb-2 flex bg-neutral-800 border border-white/10 rounded-full p-1 shadow-lg gap-1 z-50 backdrop-blur-xl"
                                         >
-                                            <FaHeart className="w-full h-full" />
+                                            {REACTIONS.map(emoji => (
+                                                <button
+                                                    key={emoji}
+                                                    onClick={(e) => { e.stopPropagation(); handleReaction(emoji); }}
+                                                    className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full text-lg transition-colors hover:scale-125 transform duration-200"
+                                                >
+                                                    {emoji}
+                                                </button>
+                                            ))}
                                         </motion.div>
-                                    ))}
+                                    )}
                                 </AnimatePresence>
 
-                                {isLiked ? (
-                                    <FaHeart className="text-neon-purple text-lg drop-shadow-[0_0_8px_rgba(211,0,197,0.8)]" />
-                                ) : (
-                                    <FaRegHeart className="text-neutral-400 text-lg group-hover/like:text-neon-purple transition-colors" />
-                                )}
-                                <span className={`text-xs font-mono ${isLiked ? 'text-neon-purple' : 'text-neutral-500'} group-hover/like:text-neon-purple transition-colors`}>
-                                    {post.fakeLikeCount !== null && post.fakeLikeCount !== undefined ? post.fakeLikeCount : (post.likes?.length || 0)}
-                                </span>
-                            </motion.button>
+                                <motion.button
+                                    onClick={handleLikeClick}
+                                    className="flex items-center gap-2 group/like relative"
+                                    whileTap={{ scale: 0.8 }}
+                                >
+                                    {/* Particle Explosion */}
+                                    <AnimatePresence>
+                                        {particles.map((p) => (
+                                            <motion.div key={p.id} initial={{ x: 0, y: 0, scale: 0, opacity: 1 }} animate={{ x: Math.cos(p.angle * Math.PI / 180) * p.distance, y: Math.sin(p.angle * Math.PI / 180) * p.distance, scale: 1, opacity: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="absolute left-2 top-2 w-2 h-2 text-neon-purple pointer-events-none">
+                                                <FaHeart className="w-full h-full" />
+                                            </motion.div>
+                                        ))}
+                                    </AnimatePresence>
 
-                            <button className="flex items-center gap-2 group/comment">
-                                <FaRegComment className="text-neutral-400 text-lg group-hover/comment:text-neon-cyan transition-colors" />
-                                <span className="text-xs font-mono text-neutral-500 group-hover/comment:text-neon-cyan transition-colors">
-                                    {comments.length}
-                                </span>
-                            </button>
+                                    {isLiked ? (
+                                        userReaction && userReaction !== 'HEART' ? (
+                                            <span className="text-lg leading-none">{userReaction}</span>
+                                        ) : (
+                                            <FaHeart className="text-neon-purple text-lg drop-shadow-[0_0_8px_rgba(211,0,197,0.8)]" />
+                                        )
+                                    ) : (
+                                        <FaRegHeart className="text-neutral-400 text-lg group-hover/like:text-neon-purple transition-colors" />
+                                    )}
+                                    <span className={`text-xs font-mono ${isLiked ? 'text-neon-purple' : 'text-neutral-500'} group-hover/like:text-neon-purple transition-colors`}>{post.fakeLikeCount !== null && post.fakeLikeCount !== undefined ? post.fakeLikeCount : (post.likes?.length || 0)}</span>
+                                </motion.button>
+                            </div>
 
-                            <button onClick={handleRepost} className="flex items-center gap-2 group/repost">
-                                <FaRetweet className="text-neutral-400 text-lg group-hover/repost:text-green-400 transition-colors" />
-                            </button>
+                            <button className="flex items-center gap-2 group/comment"><FaRegComment className="text-neutral-400 text-lg group-hover/comment:text-neon-cyan transition-colors" /><span className="text-xs font-mono text-neutral-500 group-hover/comment:text-neon-cyan transition-colors">{comments.length}</span></button>
+                            <button onClick={handleRepost} className="flex items-center gap-2 group/repost"><FaRetweet className="text-neutral-400 text-lg group-hover/repost:text-green-400 transition-colors" /></button>
                         </div>
-
-                        <button className="text-neutral-500 hover:text-white transition-colors">
-                            <FaShare />
-                        </button>
+                        <div className="flex items-center gap-4">
+                            <button className="text-neutral-500 hover:text-white transition-colors"><FaShare /></button>
+                        </div>
                     </div>
                 </div>
 

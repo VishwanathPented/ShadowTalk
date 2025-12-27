@@ -10,6 +10,7 @@ const Feed = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('latest');
+    const [timeFilter, setTimeFilter] = useState('all');
 
     const getSortedPosts = () => {
         const sorted = [...posts];
@@ -22,8 +23,11 @@ const Feed = () => {
     };
 
     const fetchPosts = async () => {
+        setLoading(true);
         try {
-            const res = await api.get('/api/posts');
+            const res = await api.get('/api/posts', {
+                params: { timeRange: timeFilter !== 'all' ? timeFilter : undefined }
+            });
             setPosts(res.data);
         } catch (error) {
             console.error(error);
@@ -34,7 +38,7 @@ const Feed = () => {
 
     useEffect(() => {
         fetchPosts();
-    }, []);
+    }, [timeFilter]); // Refetch when time filter changes
 
     return (
         <div className="min-h-screen text-neutral-200">
@@ -69,27 +73,44 @@ const Feed = () => {
                     </div>
 
                     {/* Signal Tuners (Filters) - Sticky Glass Bar */}
-                    <div className="sticky top-[72px] z-30 backdrop-blur-xl bg-black/60 border-b border-white/10 flex gap-8 pb-0 pt-4 px-4 -mx-4 rounded-b-xl transition-all duration-300">
-                        <button
-                            onClick={() => setFilter('latest')}
-                            className={`pb-3 text-xs font-bold tracking-[0.2em] uppercase transition-all relative ${filter === 'latest' ? 'text-neon-cyan text-shadow-neon' : 'text-neutral-500 hover:text-white'
-                                }`}
-                        >
-                            Live Feed
-                            {filter === 'latest' && (
-                                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-neon-cyan shadow-[0_0_15px_#00e5ff]" />
-                            )}
-                        </button>
-                        <button
-                            onClick={() => setFilter('top')}
-                            className={`pb-3 text-xs font-bold tracking-[0.2em] uppercase transition-all relative ${filter === 'top' ? 'text-neon-purple text-shadow-neon' : 'text-neutral-500 hover:text-white'
-                                }`}
-                        >
-                            High Voltage
-                            {filter === 'top' && (
-                                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-neon-purple shadow-[0_0_15px_#763af5]" />
-                            )}
-                        </button>
+                    <div className="sticky top-[72px] z-30 backdrop-blur-xl bg-black/60 border-b border-white/10 flex items-center justify-between pb-0 pt-4 px-4 -mx-4 rounded-b-xl transition-all duration-300">
+                        <div className="flex gap-8">
+                            <button
+                                onClick={() => setFilter('latest')}
+                                className={`pb-3 text-xs font-bold tracking-[0.2em] uppercase transition-all relative ${filter === 'latest' ? 'text-neon-cyan text-shadow-neon' : 'text-neutral-500 hover:text-white'
+                                    }`}
+                            >
+                                Live Feed
+                                {filter === 'latest' && (
+                                    <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-neon-cyan shadow-[0_0_15px_#00e5ff]" />
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setFilter('top')}
+                                className={`pb-3 text-xs font-bold tracking-[0.2em] uppercase transition-all relative ${filter === 'top' ? 'text-neon-purple text-shadow-neon' : 'text-neutral-500 hover:text-white'
+                                    }`}
+                            >
+                                High Voltage
+                                {filter === 'top' && (
+                                    <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-neon-purple shadow-[0_0_15px_#763af5]" />
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Time Range Selector */}
+                        <div className="pb-2">
+                            <select
+                                value={timeFilter}
+                                onChange={(e) => setTimeFilter(e.target.value)}
+                                className="bg-black/40 border border-white/10 text-xs text-neutral-400 rounded-md px-2 py-1 outline-none focus:border-neon-cyan focus:text-neon-cyan transition-colors"
+                            >
+                                <option value="all">ALL SIGNAL</option>
+                                <option value="today">LAST 24H</option>
+                                <option value="3days">3 DAYS</option>
+                                <option value="week">THIS WEEK</option>
+                                <option value="month">THIS MONTH</option>
+                            </select>
+                        </div>
                     </div>
 
                     {/* Feed Output */}

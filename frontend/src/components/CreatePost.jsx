@@ -38,14 +38,18 @@ const CreatePost = ({ onPostCreated }) => {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
+    const THEMES = ['General', 'Confession', 'Question', 'Rant', 'Happy', 'Sad'];
+    const [selectedTheme, setSelectedTheme] = useState('General');
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!content.trim()) return;
 
         setLoading(true);
         try {
-            await api.post('/api/posts', { content });
+            await api.post('/api/posts', { content, theme: selectedTheme });
             setContent('');
+            setSelectedTheme('General');
             toast.success('Posted anonymously!');
             if (onPostCreated) onPostCreated();
         } catch (error) {
@@ -55,14 +59,12 @@ const CreatePost = ({ onPostCreated }) => {
             if (msg.includes("banned")) {
                 const match = msg.match(/until ([\d-:.T]+)/);
                 if (match) {
-                    // Try to parse server time
                     const untilDate = new Date(match[1]);
                     if (!isNaN(untilDate.getTime())) {
                         setBanEndTime(untilDate.getTime());
                         return;
                     }
                 }
-                // Fallback or "Banned word detected" (immediate 5 min)
                 if (!banEndTime) {
                     setBanEndTime(Date.now() + 5 * 60 * 1000);
                 }
@@ -76,11 +78,26 @@ const CreatePost = ({ onPostCreated }) => {
         <form onSubmit={handleSubmit} className="bg-neutral-900/40 backdrop-blur-md border border-neutral-700/50 rounded-2xl p-6 mb-8 shadow-xl relative overflow-hidden group hover:border-brand-primary/30 transition-all duration-500">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-primary to-brand-accent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
+            {/* Theme Selector */}
+            <div className="mb-4 flex gap-2 flex-wrap">
+                <span className="text-xs font-mono text-neutral-500 uppercase tracking-widest mr-2 py-1.5">Theme:</span>
+                {THEMES.map(theme => (
+                    <button
+                        key={theme}
+                        type="button"
+                        onClick={() => setSelectedTheme(theme)}
+                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${selectedTheme === theme ? 'bg-brand-primary text-white border-brand-primary shadow-[0_0_10px_rgba(211,0,197,0.4)]' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-500'}`}
+                    >
+                        {theme}
+                    </button>
+                ))}
+            </div>
+
             <div className="relative">
                 <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    placeholder="What whispers in the dark?..."
+                    placeholder={`What whispers in the dark? (${selectedTheme})...`}
                     disabled={!!banEndTime}
                     className="w-full bg-neutral-950/50 text-neutral-100 p-4 rounded-xl border border-neutral-800/60 focus:border-brand-primary/50 focus:ring-0 focus:bg-neutral-950/80 outline-none resize-none transition-all placeholder:text-neutral-600 text-lg leading-relaxed min-h-[120px]"
                     maxLength={280}
