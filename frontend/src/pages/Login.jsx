@@ -180,8 +180,8 @@ const Login = () => {
                                         />
                                         {isLogin && (
                                             <div className="flex justify-end mt-1">
-                                                <button type="button" onClick={() => { setIsForgotPassword(true); setIsLogin(false); }} className="text-xs text-brand-primary hover:text-brand-accent transition-colors">
-                                                    Forgot Password?
+                                                <button type="button" onClick={() => { setIsForgotPassword(true); setIsLogin(false); }} className="text-blue-500 font-bold underline text-sm hover:text-blue-400 transition-colors">
+                                                    Forgot Password? (DEBUG)
                                                 </button>
                                             </div>
                                         )}
