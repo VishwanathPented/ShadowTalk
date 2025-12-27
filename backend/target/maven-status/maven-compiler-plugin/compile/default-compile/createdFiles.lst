@@ -25,7 +25,6 @@ com/anonymous/social/config/SecurityConfig.class
 com/anonymous/social/repository/CommentRepository.class
 com/anonymous/social/config/DataInitializer.class
 com/anonymous/social/SocialPlatformApplication.class
-com/anonymous/social/service/GoogleAuthService.class
 com/anonymous/social/repository/SocialGroupRepository.class
 com/anonymous/social/controller/GroupController.class
 com/anonymous/social/service/GroupService.class

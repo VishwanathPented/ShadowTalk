@@ -2,17 +2,19 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { GoogleLogin } from '@react-oauth/google';
+
 
 import CyberpunkBackground from '../components/CyberpunkBackground';
 import { motion } from 'framer-motion';
 
 const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
+    const [isOtpStep, setIsOtpStep] = useState(false);
+    const [otp, setOtp] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [alias, setAlias] = useState('');
-    const { login, signup, googleLogin } = useAuth();
+    const { login, signup, verifyOtp } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
@@ -28,25 +30,29 @@ const Login = () => {
         }
 
         try {
-            if (isLogin) {
+            if (isOtpStep) {
+                // Verify OTP
+                await verifyOtp(email, otp);
+                toast.success('Identity Verified.');
+                navigate('/feed');
+            } else if (isLogin) {
                 const userData = await login(email, password);
                 toast.success('Welcome back, ghost.');
                 if (userData.role === 'ADMIN') {
                     navigate('/shadow');
                     return;
                 }
+                navigate('/feed');
             } else {
-                await signup(email, password, alias);
-                toast.success('Account created anonymously.');
+                // Signup Step 1
+                const res = await signup(email, password, alias);
+                toast.success(res.message || 'OTP Sent to your email.');
+                setIsOtpStep(true);
             }
-            navigate('/feed');
         } catch (error) {
-            console.error("Login Error:", error);
-            if (error.response) {
-                console.error("Response Data:", error.response.data);
-                console.error("Response Status:", error.response.status);
-            }
-            toast.error(isLogin ? 'Login failed: ' + (error.response?.data?.message || error.message) : 'Signup failed');
+            console.error("Auth Error:", error);
+            const msg = error.response?.data?.message || error.message;
+            toast.error(isOtpStep ? 'Verification failed: ' + msg : (isLogin ? 'Login failed: ' + msg : 'Signup failed: ' + msg));
         } finally {
             setLoading(false);
         }
@@ -65,58 +71,80 @@ const Login = () => {
                 <div className="glass-panel p-8 rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl bg-neutral-900/60">
                     <div className="text-center mb-8">
                         <motion.h2
-                            key={isLogin ? 'login' : 'signup'}
+                            key={isLogin ? 'login' : (isOtpStep ? 'verify' : 'signup')}
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="text-4xl font-black bg-gradient-to-r from-brand-primary via-purple-500 to-brand-accent bg-clip-text text-transparent mb-2"
                         >
-                            {isLogin ? 'Enter the Void' : 'Join the Shadows'}
+                            {isOtpStep ? 'Verify Signal' : (isLogin ? 'Enter the Void' : 'Join the Shadows')}
                         </motion.h2>
                         <p className="text-neutral-400">
-                            {isLogin ? 'Welcome back, anonymous traveler.' : 'Create your secret identity. No masks required.'}
+                            {isOtpStep ? 'Enter the code sent to your frequency.' : (isLogin ? 'Welcome back, anonymous traveler.' : 'Create your secret identity. No masks required.')}
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {!isLogin && (
+                        {isOtpStep ? (
                             <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="overflow-hidden"
+                                key="otp-input"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
                             >
-                                <label className="block text-brand-primary/80 text-xs font-bold uppercase tracking-wider mb-1">Alias (Optional)</label>
+                                <label className="block text-brand-primary/80 text-xs font-bold uppercase tracking-wider mb-1">Verification Code</label>
                                 <input
                                     type="text"
-                                    value={alias}
-                                    onChange={(e) => setAlias(e.target.value)}
-                                    className="w-full bg-neutral-950/50 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all decoration-none"
-                                    placeholder="Choose your codename..."
+                                    required
+                                    value={otp}
+                                    onChange={(e) => setOtp(e.target.value)}
+                                    className="w-full bg-neutral-950/50 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all text-center tracking-widest text-xl font-mono"
+                                    placeholder="000000"
+                                    maxLength={6}
                                 />
+                                <p className="text-xs text-center text-neutral-500 mt-2">Check your console/email for the code (Dev Mode)</p>
                             </motion.div>
+                        ) : (
+                            <>
+                                {!isLogin && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <label className="block text-brand-primary/80 text-xs font-bold uppercase tracking-wider mb-1">Alias (Optional)</label>
+                                        <input
+                                            type="text"
+                                            value={alias}
+                                            onChange={(e) => setAlias(e.target.value)}
+                                            className="w-full bg-neutral-950/50 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all decoration-none"
+                                            placeholder="Choose your codename..."
+                                        />
+                                    </motion.div>
+                                )}
+                                <div>
+                                    <label className="block text-brand-primary/80 text-xs font-bold uppercase tracking-wider mb-1">Email</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full bg-neutral-950/50 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
+                                        placeholder="you@example.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-brand-primary/80 text-xs font-bold uppercase tracking-wider mb-1">Password</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full bg-neutral-950/50 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                            </>
                         )}
-                        <div>
-                            <label className="block text-brand-primary/80 text-xs font-bold uppercase tracking-wider mb-1">Email</label>
-                            <input
-                                type="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-neutral-950/50 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
-                                placeholder="you@example.com"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-brand-primary/80 text-xs font-bold uppercase tracking-wider mb-1">Password</label>
-                            <input
-                                type="password"
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-neutral-950/50 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
-                                placeholder="••••••••"
-                            />
-                        </div>
 
                         <button
                             type="submit"
@@ -132,40 +160,17 @@ const Login = () => {
                                     Processing...
                                 </span>
                             ) : (
-                                isLogin ? 'Manifest Identity' : 'Initiate Protocol'
+                                isOtpStep ? 'Confirm Identity' : (isLogin ? 'Manifest Identity' : 'Initiate Protocol')
                             )}
                         </button>
                     </form>
 
-                    <div className="mt-6 flex justify-center">
-                        <GoogleLogin
-                            onSuccess={credentialResponse => {
-                                googleLogin(credentialResponse.credential)
-                                    .then((userData) => {
-                                        toast.success('Welcome back, verified operative.');
-                                        if (userData.role === 'ADMIN') {
-                                            navigate('/shadow');
-                                        } else {
-                                            navigate('/feed');
-                                        }
-                                    })
-                                    .catch(err => {
-                                        console.error(err);
-                                        toast.error('Google Sign-In failed: ' + (err.response?.data || "Unable to verify"));
-                                    });
-                            }}
-                            onError={() => {
-                                toast.error('Google Sign-In Failed');
-                            }}
-                            theme="filled_black"
-                            shape="pill"
-                            width="300"
-                        />
-                    </div>
-
                     <div className="mt-8 text-center">
                         <button
-                            onClick={() => setIsLogin(!isLogin)}
+                            onClick={() => {
+                                setIsLogin(!isLogin);
+                                setIsOtpStep(false);
+                            }}
                             className="text-neutral-400 hover:text-white text-sm transition-colors group"
                         >
                             {isLogin ? (

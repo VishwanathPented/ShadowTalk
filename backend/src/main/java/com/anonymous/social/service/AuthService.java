@@ -24,6 +24,9 @@ public class AuthService {
     private JwtUtil jwtUtil;
 
     @Autowired
+    private EmailService emailService;
+
+    @Autowired
     private AuthenticationManager authenticationManager;
 
     private static final String[] ADJECTIVES = {
@@ -39,7 +42,14 @@ public class AuthService {
 
     public User register(String email, String password, String alias) {
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("Email already in use");
+            User existing = userRepository.findByEmail(email).get();
+            if (existing.isVerified()) {
+                throw new RuntimeException("Email already in use");
+            } else {
+                // Resend OTP if not verified? Or overwrite?
+                // Let's overwrite for now, treating as new signup attempt
+                userRepository.delete(existing);
+            }
         }
 
         String finalName;
@@ -57,7 +67,16 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(password));
         user.setAnonymousName(finalName);
 
-        return userRepository.save(user);
+        // OTP Logic
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        user.setOtp(otp);
+        user.setOtpExpiry(java.time.LocalDateTime.now().plusMinutes(10));
+        user.setVerified(false);
+
+        User savedUser = userRepository.save(user);
+        emailService.sendOtp(email, otp);
+
+        return savedUser;
     }
 
     // Kept for backward compatibility if needed, though controller will update
@@ -72,6 +91,10 @@ public class AuthService {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
         var user = userRepository.findByEmail(email).orElseThrow();
 
+        if (!user.isVerified()) {
+             throw new RuntimeException("Account not verified. Please verify your email.");
+        }
+
         // Fix: Add authorities
         var authorities = java.util.Collections.singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole()));
         var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), authorities);
@@ -85,29 +108,7 @@ public class AuthService {
         return buildAuthResponse(user, token);
     }
 
-    public java.util.Map<String, Object> loginWithGoogle(String email) {
-        User user = userRepository.findByEmail(email).orElse(null);
-        if (user == null) {
-            String finalName = generateUniqueAnonymousName();
-            user = new User();
-            user.setEmail(email);
-            // Password is null for OAuth users
-            user.setAnonymousName(finalName);
-            user = userRepository.save(user);
-        }
 
-        var authorities = java.util.Collections.singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole()));
-        // Pass empty password for UserDetails if actual password is null
-        String pwd = user.getPassword() != null ? user.getPassword() : "";
-        var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), pwd, authorities);
-
-        String token = jwtUtil.generateToken(java.util.Map.of(
-                "anonymousName", user.getAnonymousName(),
-                "role", user.getRole()
-        ), userDetails);
-
-        return buildAuthResponse(user, token);
-    }
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
@@ -196,5 +197,30 @@ public class AuthService {
         return response;
     }
 
+    public java.util.Map<String, Object> verifyOtp(String email, String otp) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.isVerified()) {
+             return generateFreshToken(user);
+        }
+
+        if (user.getOtp() == null || !user.getOtp().equals(otp)) {
+            throw new RuntimeException("Invalid OTP");
+        }
+
+        if (user.getOtpExpiry().isBefore(java.time.LocalDateTime.now())) {
+            throw new RuntimeException("OTP Expired");
+        }
+
+        // OTP Valid
+        user.setVerified(true);
+        user.setOtp(null);
+        user.setOtpExpiry(null);
+        userRepository.save(user);
+
+        // Generate Token
+        return generateFreshToken(user);
+    }
 
 }

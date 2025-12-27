@@ -66,12 +66,12 @@ export const AuthProvider = ({ children }) => {
     };
 
     const signup = async (email, password, alias) => {
-        await api.post('/auth/signup', { email, password, alias });
-        return login(email, password);
+        const res = await api.post('/auth/signup', { email, password, alias });
+        return res.data;
     };
 
-    const googleLogin = async (token) => {
-        const res = await api.post('/auth/google', { token });
+    const verifyOtp = async (email, otp) => {
+        const res = await api.post('/auth/verify-otp', { email, otp });
         const data = res.data;
         let newToken = data.token;
         if (typeof newToken === 'string') {
@@ -82,6 +82,8 @@ export const AuthProvider = ({ children }) => {
         setUser({ loggedIn: true, ...data });
         return data;
     };
+
+
 
     const logout = () => {
         localStorage.removeItem('token');
@@ -115,7 +117,7 @@ export const AuthProvider = ({ children }) => {
 
 
     return (
-        <AuthContext.Provider value={{ user, login, signup, googleLogin, logout, regenerateIdentity, loading }}>
+        <AuthContext.Provider value={{ user, login, signup, verifyOtp, logout, regenerateIdentity, loading }}>
             {loading ? <div className="text-white text-center mt-20">Initializing Session...</div> : children}
         </AuthContext.Provider>
     );

@@ -40,6 +40,15 @@ public class User {
     @Column(name = "banned_until")
     private LocalDateTime bannedUntil;
 
+    @Column(name = "otp")
+    private String otp;
+
+    @Column(name = "otp_expiry")
+    private LocalDateTime otpExpiry;
+
+    @Column(name = "verified")
+    private Boolean verified = false;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_follows",
@@ -91,6 +100,15 @@ public class User {
 
     public LocalDateTime getBannedUntil() { return bannedUntil; }
     public void setBannedUntil(LocalDateTime bannedUntil) { this.bannedUntil = bannedUntil; }
+
+    public String getOtp() { return otp; }
+    public void setOtp(String otp) { this.otp = otp; }
+
+    public LocalDateTime getOtpExpiry() { return otpExpiry; }
+    public void setOtpExpiry(LocalDateTime otpExpiry) { this.otpExpiry = otpExpiry; }
+
+    public Boolean isVerified() { return Boolean.TRUE.equals(verified); }
+    public void setVerified(Boolean verified) { this.verified = verified; }
 
     public java.util.Set<User> getFollowing() { return following; }
     public void setFollowing(java.util.Set<User> following) { this.following = following; }
