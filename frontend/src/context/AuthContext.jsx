@@ -114,10 +114,20 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const forgotPassword = async (email) => {
+        const res = await api.post('/auth/forgot-password', { email });
+        return res.data;
+    };
+
+    const resetPassword = async (email, otp, newPassword) => {
+        const res = await api.post('/auth/reset-password', { email, otp, newPassword });
+        return res.data;
+    };
+
 
 
     return (
-        <AuthContext.Provider value={{ user, login, signup, verifyOtp, logout, regenerateIdentity, loading }}>
+        <AuthContext.Provider value={{ user, login, signup, verifyOtp, logout, regenerateIdentity, forgotPassword, resetPassword, loading }}>
             {loading ? <div className="text-white text-center mt-20">Initializing Session...</div> : children}
         </AuthContext.Provider>
     );

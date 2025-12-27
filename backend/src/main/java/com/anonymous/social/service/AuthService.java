@@ -223,4 +223,38 @@ public class AuthService {
         return generateFreshToken(user);
     }
 
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.isVerified()) {
+            throw new RuntimeException("Account not verified");
+        }
+
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        user.setOtp(otp);
+        user.setOtpExpiry(java.time.LocalDateTime.now().plusMinutes(10));
+        userRepository.save(user);
+
+        emailService.sendOtp(email, otp);
+    }
+
+    public void resetPassword(String email, String otp, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getOtp() == null || !user.getOtp().equals(otp)) {
+            throw new RuntimeException("Invalid OTP");
+        }
+
+        if (user.getOtpExpiry().isBefore(java.time.LocalDateTime.now())) {
+            throw new RuntimeException("OTP Expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setOtp(null);
+        user.setOtpExpiry(null);
+        userRepository.save(user);
+    }
+
 }

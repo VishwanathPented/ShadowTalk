@@ -41,6 +41,7 @@ This guide will help you host **ShadowTalk** online using free tiers from **Rend
     | `MAIL_PASSWORD` | `rpks splx upxs abbb` |
     | `GOOGLE_CLIENT_ID` | Your Google Client ID |
     | `PORT` | `8080` |
+    | `ALLOWED_ORIGINS` | Your Vercel Frontend URL (e.g., `https://shadowtalk.vercel.app`) |
 
 8.  Click **Create Web Service**.
 9.  Wait for the build to finish. Once live, Render will give you a URL (e.g., `https://shadowtalk-backend.onrender.com`). **Copy this URL.**
