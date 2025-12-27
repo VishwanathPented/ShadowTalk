@@ -131,6 +131,14 @@ const Login = () => {
                                         className="w-full bg-neutral-950/50 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
                                         placeholder="you@example.com"
                                     />
+                                    {!isLogin && (
+                                        <div className="mt-3 p-3 bg-brand-primary/5 border border-brand-primary/20 rounded-lg">
+                                            <p className="text-xs text-neutral-300 leading-relaxed font-medium">
+                                                <span className="text-brand-primary font-bold uppercase tracking-wide mr-1">Privacy Note:</span>
+                                                Your email is <span className="text-white font-bold">never revealed</span> to anyone. It is used strictly for account verification to keep our community safe and spam-free.
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-brand-primary/80 text-xs font-bold uppercase tracking-wider mb-1">Password</label>

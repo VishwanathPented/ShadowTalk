@@ -6,8 +6,8 @@ import api from '../api/axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     HiUser, HiUserGroup, HiTrash, HiShieldCheck, HiServer,
-    HiSpeakerphone, HiChartBar, HiTerminal, HiLogout, HiRefresh,
-    HiFire, HiLightningBolt
+    HiSpeakerphone, HiChartBar, HiTerminal, HiRefresh,
+    HiLightningBolt
 } from 'react-icons/hi';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'react-hot-toast';
@@ -19,7 +19,6 @@ const AdminDashboard = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get('tab') || 'overview';
 
-    // Changing how setActiveTab works by creating a helper instead of state setter
     const setActiveTab = (tab) => {
         setSearchParams({ tab });
     };
@@ -36,6 +35,8 @@ const AdminDashboard = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [userMessages, setUserMessages] = useState([]);
     const [injectMsg, setInjectMsg] = useState("");
+    const [reports, setReports] = useState([]);
+    const [feedback, setFeedback] = useState([]);
 
     const [loading, setLoading] = useState(false);
 
@@ -48,14 +49,15 @@ const AdminDashboard = () => {
 
     const fetchData = async () => {
         try {
-            const [statsRes, usersRes, groupsRes, msgsRes, bannedRes, healthRes, reportsRes] = await Promise.all([
+            const [statsRes, usersRes, groupsRes, msgsRes, bannedRes, healthRes, reportsRes, feedbackRes] = await Promise.all([
                 api.get('/api/shadow/stats'),
                 api.get('/api/shadow/users'),
                 api.get('/api/shadow/groups'),
                 api.get('/api/shadow/messages'),
                 api.get('/api/shadow/banned-words'),
                 api.get('/api/shadow/system-health'),
-                api.get('/api/shadow/reports')
+                api.get('/api/shadow/reports'),
+                api.get('/api/feedback')
             ]);
             setStats(statsRes.data);
             setUsers(usersRes.data);
@@ -64,9 +66,9 @@ const AdminDashboard = () => {
             setBannedWords(bannedRes.data);
             setSystemHealth(healthRes.data);
             setReports(reportsRes.data);
+            setFeedback(feedbackRes.data);
         } catch (err) {
             console.error("Dashboard sync failed", err);
-            // toast.error("Sync Failed"); // Optional: clean up logs
         }
     };
 
@@ -148,8 +150,6 @@ const AdminDashboard = () => {
         } catch (err) { alert("Failed to delete"); }
     };
 
-    const [reports, setReports] = useState([]);
-
     const handleDeleteReport = async (id) => {
         try {
             await api.delete(`/api/shadow/reports/${id}`);
@@ -158,7 +158,6 @@ const AdminDashboard = () => {
         } catch (err) { alert("Failed to dismiss report"); }
     };
 
-    // Add edit stats handler
     const handleEditLikes = async (postId, currentLikes) => {
         const newLikes = prompt(`Enter new like count (Current: ${currentLikes || 0}):`, currentLikes || 0);
         if (newLikes !== null && !isNaN(newLikes)) {
@@ -213,6 +212,7 @@ const AdminDashboard = () => {
                     <SidebarItem id="overview" icon={HiChartBar} label="Dashboard" />
                     <div className="my-2 border-t border-white/5 mx-6"></div>
                     <SidebarItem id="reports" icon={HiShieldCheck} label="Reports" />
+                    <SidebarItem id="feedback" icon={HiSpeakerphone} label="Feedback" />
                     <SidebarItem id="users" icon={HiUser} label="Operatives" />
                     <SidebarItem id="groups" icon={HiUserGroup} label="Networks" />
                     <SidebarItem id="messages" icon={HiTerminal} label="Intercepts" />
@@ -662,6 +662,33 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
+                    {!loading && activeTab === 'feedback' && (
+                        <div className="space-y-4">
+                            {feedback.length === 0 ? (
+                                <div className="p-12 text-center text-neutral-500 font-mono">NO FEEDBACK RECEIVED</div>
+                            ) : (
+                                feedback.map(item => (
+                                    <div key={item.id} className="bg-neutral-900/50 p-6 rounded-2xl border border-white/10 flex justify-between items-start">
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <span className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${item.type === 'BUG' ? 'border-red-500/30 text-red-400' : 'border-green-500/30 text-green-400'}`}>
+                                                    {item.type}
+                                                </span>
+                                                <span className="text-neutral-500 text-xs">
+                                                    {new Date(item.createdAt).toLocaleString()}
+                                                </span>
+                                            </div>
+                                            <p className="text-white text-sm whitespace-pre-wrap">{item.content}</p>
+                                            <p className="text-neutral-500 text-xs mt-2 font-mono">
+                                                User ID: {item.userId || 'Anonymous'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+
                     {!loading && activeTab === 'system' && systemHealth && (
                         <div className="grid grid-cols-1 gap-6">
                             <div className="bg-neutral-900/50 p-8 rounded-3xl border border-white/10">
@@ -704,8 +731,6 @@ const AdminDashboard = () => {
                     )}
                 </div>
             </div>
-
-
         </div >
     );
 };
