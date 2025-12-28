@@ -1,4 +1,4 @@
-# ShadowTalk
+# ShadowTalk - Anonymous Chatting Application
 
 A Twitter-like anonymous social platform where users are assigned random anonymous identities. Built with Spring Boot and React.
 
